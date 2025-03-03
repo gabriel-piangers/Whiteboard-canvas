@@ -38,7 +38,8 @@ export function App() {
           startX: x,
           startY: y,
           width: 0,
-          height: 0
+          height: 0,
+          color: selectedColor
         };
         break;
       case 'circle':
@@ -48,7 +49,8 @@ export function App() {
           startY: y,
           centerX: x,
           centerY: y,
-          radius: 0
+          radius: 0,
+          color: selectedColor
         }
         break;
     }
