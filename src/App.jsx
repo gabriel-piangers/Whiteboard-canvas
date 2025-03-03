@@ -58,7 +58,6 @@ export function App() {
   }
 
   function redrawBaseCanvas() {
-    console.log('shapes: ', shapes)
     const canvas = baseCanvasRef.current;
     if (!canvas) return;
 
@@ -69,7 +68,6 @@ export function App() {
   }
 
   function redrawTempCanvas() {
-    console.log('currentShape: ', currentShape)
     const canvas = tempCanvasRef.current
     if (!canvas) return;
 
@@ -81,9 +79,6 @@ export function App() {
 
    function drawShape(ctx, shape) {
     if (!shape) return;
-    console.log('drawing', shape)
-    ctx.save();
-
     ctx.strokeStyle = shape.color;
     ctx.fillStyle = shape.color;
     ctx.lineWidth = 2;
@@ -91,11 +86,11 @@ export function App() {
     switch (shape.type) {
       case "freehand":
         ctx.beginPath();
-        for (let i = 0; i < shape.points.length - 1; i++) {
-          ctx.moveTo(shape.points[i].x, shape.points[i].y);
-          ctx.lineTo(shape.points[i + 1].x, shape.points[i + 1].y);
-          ctx.stroke();
+        ctx.moveTo(shape.points[0].x, shape.points[0].y);
+        for (let i = 1; i < shape.points.length - 1; i++) {
+          ctx.lineTo(shape.points[i].x, shape.points[i].y);
         }
+        ctx.stroke();
         break;
       case "line":
         ctx.beginPath();
@@ -104,7 +99,6 @@ export function App() {
         ctx.stroke();
         break;
     }
-    ctx.restore();
   }
 
   function saveShapes(shapes) {
