@@ -4,8 +4,8 @@
   border: 0;
 }
 
-.canvas {
-  background-color: rgb(248, 244, 239);
+.base-canvas {
+  background-color: antiquewhite;
 }
 
 .canvas-container {

@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 
 export function App() {
-  const canvasRef = useRef(null);
+  const baseCanvasRef = useRef(null);
+  const tempCanvasRef = useRef(null);
   const [selectedColor, setColor] = useState("#000000");
   const [selectedTool, setSelectedTool] = useState("pen");
   const [shapes, setShapes] = useState(
@@ -56,18 +57,31 @@ export function App() {
     saveShapes(newShapes);
   }
 
-  function redrawCanvas() {
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext("2d");
+  function redrawBaseCanvas() {
+    console.log('shapes: ', shapes)
+    const canvas = baseCanvasRef.current;
+    if (!canvas) return;
 
+    const ctx = canvas.getContext("2d");
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    [...shapes, currentShape].filter(Boolean).forEach((shape) => {
-      drawShape(ctx, shape);
-    });
+    shapes.forEach((shape) => drawShape(ctx, shape));
   }
 
-  function drawShape(ctx, shape) {
+  function redrawTempCanvas() {
+    console.log('currentShape: ', currentShape)
+    const canvas = tempCanvasRef.current
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d')
+    ctx.clearRect(0, 0, canvas.width, canvas.height)
+
+    drawShape(ctx, currentShape)
+  }
+
+   function drawShape(ctx, shape) {
+    if (!shape) return;
+    console.log('drawing', shape)
     ctx.save();
 
     ctx.strokeStyle = shape.color;
@@ -90,6 +104,7 @@ export function App() {
         ctx.stroke();
         break;
     }
+    ctx.restore();
   }
 
   function saveShapes(shapes) {
@@ -101,9 +116,9 @@ export function App() {
     setShapes([]);
   };
 
-  useEffect(() => {
-    redrawCanvas();
-  }, [shapes, currentShape]);
+  useEffect(redrawBaseCanvas,[shapes])
+
+  useEffect(redrawTempCanvas, [currentShape])
 
 
   return (
@@ -142,30 +157,41 @@ export function App() {
           <p>Line</p>
         </div>
       </div>
+      <div>
       <canvas
-        ref={canvasRef}
+        ref={baseCanvasRef}
         width={window.innerWidth}
         height={window.innerHeight}
-        className="canvas"
-        onMouseDown={(event) => {
-          const canvas = canvasRef.current
-          const rect = canvas.getBoundingClientRect();
-          const x = event.clientX - rect.left;
-          const y = event.clientY - rect.top;
-          startShape(x, y);
-        }}
-        onMouseMove={(event) => {
-          const canvas = canvasRef.current
-          const rect = canvas.getBoundingClientRect();
-          const x = event.clientX - rect.left;
-          const y = event.clientY - rect.top;
+        className="canvas base-canvas"
+        style={{position: 'absolute', zIndex: 1}}
+      />
 
-          updateShape(x, y)
-        }}
-        onMouseUp={() => {
-          finishShape()
-        }}
-      ></canvas>
+      <canvas
+      ref={tempCanvasRef}
+      width={window.innerWidth}
+      height={window.innerHeight}
+      className="canvas temp-canvas"
+      style={{position: 'absolute', zIndex: 2}}
+      onMouseDown={(event) => {
+        const canvas = baseCanvasRef.current
+        const rect = canvas.getBoundingClientRect();
+        const x = event.clientX - rect.left;
+        const y = event.clientY - rect.top;
+        startShape(x, y);
+      }}
+      onMouseMove={(event) => {
+        const canvas = baseCanvasRef.current
+        const rect = canvas.getBoundingClientRect();
+        const x = event.clientX - rect.left;
+        const y = event.clientY - rect.top;
+
+        updateShape(x, y)
+      }}
+      onMouseUp={() => {
+        finishShape()
+      }}
+      />
+      </div>
     </div>
   );
 }
