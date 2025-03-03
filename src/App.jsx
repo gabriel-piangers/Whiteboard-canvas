@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { hip } from "./utils/math";
 
 export function App() {
   const baseCanvasRef = useRef(null);
@@ -11,18 +12,18 @@ export function App() {
   const [currentShape, setCurrentShape] = useState(null);
 
   function startShape(x, y) {
-    let newCurrentShape = null;
+    let newShape = null;
 
     switch (selectedTool) {
       case "pen":
-        newCurrentShape = {
+        newShape = {
           type: "freehand",
           points: [{ x, y }],
           color: selectedColor,
         };
         break;
       case "line":
-        newCurrentShape = {
+        newShape = {
           type: "line",
           startX: x,
           startY: y,
@@ -30,8 +31,28 @@ export function App() {
           endY: y,
           color: selectedColor,
         };
+        break;
+      case 'rect':
+        newShape = {
+          type: 'rect',
+          startX: x,
+          startY: y,
+          width: 0,
+          height: 0
+        };
+        break;
+      case 'circle':
+        newShape = {
+          type: 'circle',
+          startX: x,
+          startY: y,
+          centerX: x,
+          centerY: y,
+          radius: 0
+        }
+        break;
     }
-    setCurrentShape(newCurrentShape);
+    setCurrentShape(newShape);
   }
 
   function updateShape(x, y) {
@@ -46,6 +67,15 @@ export function App() {
         updatedShape.endX = x;
         updatedShape.endY = y;
         break;
+      case 'rect':
+        updatedShape.width = (x - updatedShape.startX)
+        updatedShape.height = (y - updatedShape.startY)
+        break;
+      case 'circle':
+        updatedShape.radius = hip((x - updatedShape.centerX), (y - updatedShape.centerY))
+        updatedShape.centerX = updatedShape.startX + (x - updatedShape.startX)/2
+        updatedShape.centerY = updatedShape.startY + (y - updatedShape.startY)/2
+
     }
     setCurrentShape(updatedShape);
   }
@@ -98,6 +128,16 @@ export function App() {
         ctx.lineTo(shape.endX, shape.endY);
         ctx.stroke();
         break;
+      case 'rect': 
+        ctx.beginPath()
+        ctx.rect(shape.startX, shape.startY, shape.width, shape.height)
+        ctx.stroke()
+        break;
+      case 'circle':
+        ctx.beginPath()
+        ctx.arc(shape.centerX, shape.centerY, shape.radius, 0, 2 * Math.PI, false)
+        ctx.stroke()       
+        break;
     }
   }
 
@@ -149,6 +189,26 @@ export function App() {
             }}
           />
           <p>Line</p>
+        </div>
+        <div className="tool-container">
+          <input
+            type="radio"
+            name="selected-tool"
+            onChange={() => {
+              setSelectedTool("rect");
+            }}
+          />
+          <p>Rectangle</p>
+        </div>
+        <div className="tool-container">
+          <input
+            type="radio"
+            name="selected-tool"
+            onChange={() => {
+              setSelectedTool("circle");
+            }}
+          />
+          <p>Cirlce</p>
         </div>
       </div>
       <div>
