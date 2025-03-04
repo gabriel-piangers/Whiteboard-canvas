@@ -5,6 +5,8 @@ export function App() {
   const baseCanvasRef = useRef(null);
   const tempCanvasRef = useRef(null);
   const [selectedColor, setColor] = useState("#000000");
+  const [selectedWidth, setWidth] = useState('2')
+  const maxLineWidth = 30;
   const [selectedTool, setSelectedTool] = useState("pen");
   const [shapes, setShapes] = useState(
     JSON.parse(localStorage.getItem("shapes")) || []
@@ -20,6 +22,7 @@ export function App() {
           type: "freehand",
           points: [{ x, y }],
           color: selectedColor,
+          lineWidth: selectedWidth
         };
         break;
       case "line":
@@ -30,6 +33,7 @@ export function App() {
           endX: x,
           endY: y,
           color: selectedColor,
+          lineWidth: selectedWidth
         };
         break;
       case 'rect':
@@ -39,7 +43,8 @@ export function App() {
           startY: y,
           width: 0,
           height: 0,
-          color: selectedColor
+          color: selectedColor,
+          lineWidth: selectedWidth,
         };
         break;
       case 'circle':
@@ -50,7 +55,8 @@ export function App() {
           centerX: x,
           centerY: y,
           radius: 0,
-          color: selectedColor
+          color: selectedColor,
+          lineWidth: selectedWidth
         }
         break;
       case 'eraser':
@@ -58,6 +64,7 @@ export function App() {
           type: 'eraser',
           points: [{x, y}],
           border: true,
+          lineWidth: selectedWidth,
         }
         break;
 
@@ -131,7 +138,7 @@ export function App() {
     if (!shape) return;
     ctx.strokeStyle = shape.color;
     ctx.fillStyle = shape.color;
-    ctx.lineWidth = 2;
+    ctx.lineWidth = shape.lineWidth;
 
     switch (shape.type) {
       case "freehand":
@@ -141,6 +148,12 @@ export function App() {
           ctx.lineTo(shape.points[i].x, shape.points[i].y);
         }
         ctx.stroke();
+        for (let i=0; i<shape.points.length; i++) {
+          ctx.beginPath()
+          ctx.arc(shape.points[i].x, shape.points[i].y, shape.lineWidth/2, 0, 2 * Math.PI, false)
+          ctx.fill()
+        }
+
         break;
       case "line":
         ctx.beginPath();
@@ -162,10 +175,11 @@ export function App() {
         ctx.globalCompositeOperation = 'destination-out'
         for (let i = 0; i<shape.points.length; i++) {
           ctx.beginPath()
-          ctx.arc(shape.points[i].x, shape.points[i].y, 20, 0, 2 * Math.PI, false)
+          ctx.arc(shape.points[i].x, shape.points[i].y, shape.lineWidth*2, 0, 2 * Math.PI, false)
           if (i === shape.points.length-1 && shape.border) {
             ctx.globalCompositeOperation = 'source-over'
-            ctx.strokeStyle = '#000000'
+            ctx.strokeStyle = 'rgba(0,0,0,0.2)'
+            ctx.lineWidth = 2;
             ctx.stroke()
             ctx.globalCompositeOperation = 'destination-out'
           }          
@@ -202,6 +216,10 @@ export function App() {
             setColor(event.target.value);
           }}
         />
+
+        <input type="number" value={selectedWidth} onChange={(event) => {
+          setWidth(Math.max(Math.min(maxLineWidth, event.target.value), 1))
+        }}/>
         <button className="clear-canvas" onClick={clearCanvas}>
           Clear All
         </button>

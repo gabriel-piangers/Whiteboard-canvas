@@ -12,6 +12,11 @@
   display: flex;
 }
 
+.tools-bar {
+  display: flex;
+  flex-direction: column;
+}
+
 .tool-container {
   display: flex;
 }
