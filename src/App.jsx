@@ -53,6 +53,14 @@ export function App() {
           color: selectedColor
         }
         break;
+      case 'eraser':
+        newShape = {
+          type: 'eraser',
+          points: [{x, y}],
+          border: true,
+        }
+        break;
+
     }
     setCurrentShape(newShape);
   }
@@ -77,26 +85,36 @@ export function App() {
         updatedShape.radius = hip((x - updatedShape.centerX), (y - updatedShape.centerY))
         updatedShape.centerX = updatedShape.startX + (x - updatedShape.startX)/2
         updatedShape.centerY = updatedShape.startY + (y - updatedShape.startY)/2
-
-    }
+        break;
+      case 'eraser':
+        updatedShape.points.push({x, y})
+        break;
+    } 
     setCurrentShape(updatedShape);
   }
 
   function finishShape() {
+    if (currentShape.type === 'eraser') {
+      currentShape.border = false;
+    }
     const newShapes = [...shapes, currentShape];
+    
     setShapes(newShapes);
     setCurrentShape(null);
     saveShapes(newShapes);
   }
 
   function redrawBaseCanvas() {
+    if (currentShape !== null && currentShape.type !== 'eraser') {
+      return
+    }
     const canvas = baseCanvasRef.current;
     if (!canvas) return;
 
     const ctx = canvas.getContext("2d");
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    shapes.forEach((shape) => drawShape(ctx, shape));
+    [...shapes, currentShape].filter(Boolean).forEach((shape) => drawShape(ctx, shape));
   }
 
   function redrawTempCanvas() {
@@ -140,6 +158,22 @@ export function App() {
         ctx.arc(shape.centerX, shape.centerY, shape.radius, 0, 2 * Math.PI, false)
         ctx.stroke()       
         break;
+      case 'eraser':
+        ctx.globalCompositeOperation = 'destination-out'
+        for (let i = 0; i<shape.points.length; i++) {
+          ctx.beginPath()
+          ctx.arc(shape.points[i].x, shape.points[i].y, 20, 0, 2 * Math.PI, false)
+          if (i === shape.points.length-1 && shape.border) {
+            ctx.globalCompositeOperation = 'source-over'
+            ctx.strokeStyle = '#000000'
+            ctx.stroke()
+            ctx.globalCompositeOperation = 'destination-out'
+          }          
+          ctx.fill()
+        }
+
+        ctx.globalCompositeOperation = 'source-over'
+        break;
     }
   }
 
@@ -152,7 +186,7 @@ export function App() {
     setShapes([]);
   };
 
-  useEffect(redrawBaseCanvas,[shapes])
+  useEffect(redrawBaseCanvas,[shapes, currentShape])
 
   useEffect(redrawTempCanvas, [currentShape])
 
@@ -211,6 +245,16 @@ export function App() {
             }}
           />
           <p>Cirlce</p>
+        </div>
+        <div className="tool-container">
+          <input
+            type="radio"
+            name="selected-tool"
+            onChange={() => {
+              setSelectedTool("eraser");
+            }}
+          />
+          <p>Eraser</p>
         </div>
       </div>
       <div>
