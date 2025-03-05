@@ -5,7 +5,7 @@ export function App() {
   const baseCanvasRef = useRef(null);
   const tempCanvasRef = useRef(null);
   const [selectedColor, setColor] = useState("#000000");
-  const [selectedWidth, setWidth] = useState('2')
+  const [selectedWidth, setWidth] = useState("2");
   const maxLineWidth = 30;
   const [selectedTool, setSelectedTool] = useState("pen");
   const [shapes, setShapes] = useState(
@@ -22,7 +22,7 @@ export function App() {
           type: "freehand",
           points: [{ x, y }],
           color: selectedColor,
-          lineWidth: selectedWidth
+          lineWidth: selectedWidth,
         };
         break;
       case "line":
@@ -33,12 +33,12 @@ export function App() {
           endX: x,
           endY: y,
           color: selectedColor,
-          lineWidth: selectedWidth
+          lineWidth: selectedWidth,
         };
         break;
-      case 'rect':
+      case "rect":
         newShape = {
-          type: 'rect',
+          type: "rect",
           startX: x,
           startY: y,
           width: 0,
@@ -47,34 +47,45 @@ export function App() {
           lineWidth: selectedWidth,
         };
         break;
-      case 'circle':
+      case "circle":
         newShape = {
-          type: 'circle',
+          type: "circle",
           startX: x,
           startY: y,
           centerX: x,
           centerY: y,
           radius: 0,
           color: selectedColor,
-          lineWidth: selectedWidth
-        }
+          lineWidth: selectedWidth,
+        };
         break;
-      case 'eraser':
+      case "eraser":
         newShape = {
-          type: 'eraser',
-          points: [{x, y}],
+          type: "eraser",
+          points: [{ x, y }],
           border: true,
           lineWidth: selectedWidth,
-        }
+        };
         break;
-
+      case "text":
+        newShape = {
+          type: "text",
+          startX: x,
+          startY: y,
+          content: "",
+          font: "16px Arial",
+          color: selectedColor,
+          textAlign: "left",
+          textBaseLine: "top",
+        };
+        break;
     }
     setCurrentShape(newShape);
   }
 
   function updateShape(x, y) {
     if (!currentShape) return;
-    
+
     const updatedShape = { ...currentShape };
     switch (updatedShape.type) {
       case "freehand":
@@ -84,36 +95,70 @@ export function App() {
         updatedShape.endX = x;
         updatedShape.endY = y;
         break;
-      case 'rect':
-        updatedShape.width = (x - updatedShape.startX)
-        updatedShape.height = (y - updatedShape.startY)
+      case "rect":
+        updatedShape.width = x - updatedShape.startX;
+        updatedShape.height = y - updatedShape.startY;
         break;
-      case 'circle':
-        updatedShape.radius = hip((x - updatedShape.centerX), (y - updatedShape.centerY))
-        updatedShape.centerX = updatedShape.startX + (x - updatedShape.startX)/2
-        updatedShape.centerY = updatedShape.startY + (y - updatedShape.startY)/2
+      case "circle":
+        updatedShape.radius = hip(
+          x - updatedShape.centerX,
+          y - updatedShape.centerY
+        );
+        updatedShape.centerX =
+          updatedShape.startX + (x - updatedShape.startX) / 2;
+        updatedShape.centerY =
+          updatedShape.startY + (y - updatedShape.startY) / 2;
         break;
-      case 'eraser':
-        updatedShape.points.push({x, y})
+      case "eraser":
+        updatedShape.points.push({ x, y });
         break;
-    } 
+    }
     setCurrentShape(updatedShape);
   }
 
+  function textInsertion(x, y) {
+    const input = document.createElement("input");
+    input.id = "canvas-input";
+    input.type = "text";
+    input.style.left = `${x}px`;
+    input.style.top = `${y}px`;
+    
+    document.body.appendChild(input);
+
+    let updatedText = { ...currentShape };
+    input.onblur = () => {
+      updatedText.content = input.value;
+
+      //finishShape for textInsertion
+      const newShapes = [...shapes, updatedText];
+      setShapes(newShapes);
+      setCurrentShape(null);
+      saveShapes(newShapes);
+      input.remove();
+    };
+
+    input.onkeydown = (event) => {
+      if (event.key === "Enter") {
+        input.blur();
+      }
+    };
+    input.focus();
+  }
+
   function finishShape() {
-    if (currentShape.type === 'eraser') {
+    if (currentShape.type === "eraser") {
       currentShape.border = false;
     }
     const newShapes = [...shapes, currentShape];
-    
+
     setShapes(newShapes);
     setCurrentShape(null);
     saveShapes(newShapes);
   }
 
   function redrawBaseCanvas() {
-    if (currentShape !== null && currentShape.type !== 'eraser') {
-      return
+    if (currentShape !== null && currentShape.type !== "eraser") {
+      return;
     }
     const canvas = baseCanvasRef.current;
     if (!canvas) return;
@@ -121,20 +166,22 @@ export function App() {
     const ctx = canvas.getContext("2d");
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    [...shapes, currentShape].filter(Boolean).forEach((shape) => drawShape(ctx, shape));
+    [...shapes, currentShape]
+      .filter(Boolean)
+      .forEach((shape) => drawShape(ctx, shape));
   }
 
   function redrawTempCanvas() {
-    const canvas = tempCanvasRef.current
+    const canvas = tempCanvasRef.current;
     if (!canvas) return;
 
-    const ctx = canvas.getContext('2d')
-    ctx.clearRect(0, 0, canvas.width, canvas.height)
+    const ctx = canvas.getContext("2d");
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    drawShape(ctx, currentShape)
+    drawShape(ctx, currentShape);
   }
 
-   function drawShape(ctx, shape) {
+  function drawShape(ctx, shape) {
     if (!shape) return;
     ctx.strokeStyle = shape.color;
     ctx.fillStyle = shape.color;
@@ -148,10 +195,17 @@ export function App() {
           ctx.lineTo(shape.points[i].x, shape.points[i].y);
         }
         ctx.stroke();
-        for (let i=0; i<shape.points.length; i++) {
-          ctx.beginPath()
-          ctx.arc(shape.points[i].x, shape.points[i].y, shape.lineWidth/2, 0, 2 * Math.PI, false)
-          ctx.fill()
+        for (let i = 0; i < shape.points.length; i++) {
+          ctx.beginPath();
+          ctx.arc(
+            shape.points[i].x,
+            shape.points[i].y,
+            shape.lineWidth / 2,
+            0,
+            2 * Math.PI,
+            false
+          );
+          ctx.fill();
         }
 
         break;
@@ -161,32 +215,54 @@ export function App() {
         ctx.lineTo(shape.endX, shape.endY);
         ctx.stroke();
         break;
-      case 'rect': 
-        ctx.beginPath()
-        ctx.rect(shape.startX, shape.startY, shape.width, shape.height)
-        ctx.stroke()
+      case "rect":
+        ctx.beginPath();
+        ctx.rect(shape.startX, shape.startY, shape.width, shape.height);
+        ctx.stroke();
         break;
-      case 'circle':
-        ctx.beginPath()
-        ctx.arc(shape.centerX, shape.centerY, shape.radius, 0, 2 * Math.PI, false)
-        ctx.stroke()       
+      case "circle":
+        ctx.beginPath();
+        ctx.arc(
+          shape.centerX,
+          shape.centerY,
+          shape.radius,
+          0,
+          2 * Math.PI,
+          false
+        );
+        ctx.stroke();
         break;
-      case 'eraser':
-        ctx.globalCompositeOperation = 'destination-out'
-        for (let i = 0; i<shape.points.length; i++) {
-          ctx.beginPath()
-          ctx.arc(shape.points[i].x, shape.points[i].y, shape.lineWidth*2, 0, 2 * Math.PI, false)
-          if (i === shape.points.length-1 && shape.border) {
-            ctx.globalCompositeOperation = 'source-over'
-            ctx.strokeStyle = 'rgba(0,0,0,0.2)'
+      case "eraser":
+        ctx.globalCompositeOperation = "destination-out";
+        for (let i = 0; i < shape.points.length; i++) {
+          ctx.beginPath();
+          ctx.arc(
+            shape.points[i].x,
+            shape.points[i].y,
+            shape.lineWidth * 2,
+            0,
+            2 * Math.PI,
+            false
+          );
+          if (i === shape.points.length - 1 && shape.border) {
+            ctx.globalCompositeOperation = "source-over";
+            ctx.strokeStyle = "rgba(0,0,0,0.2)";
             ctx.lineWidth = 2;
-            ctx.stroke()
-            ctx.globalCompositeOperation = 'destination-out'
-          }          
-          ctx.fill()
+            ctx.stroke();
+            ctx.globalCompositeOperation = "destination-out";
+          }
+          ctx.fill();
         }
 
-        ctx.globalCompositeOperation = 'source-over'
+        ctx.globalCompositeOperation = "source-over";
+        break;
+      case "text":
+        ctx.font = shape.font;
+        ctx.fillStyle = shape.color;
+        ctx.textAlign = shape.textAlign;
+        ctx.textBaseLine = shape.textBaseLine;
+        ctx.fillText(shape.content, shape.startX, shape.startY);
+
         break;
     }
   }
@@ -200,10 +276,9 @@ export function App() {
     setShapes([]);
   };
 
-  useEffect(redrawBaseCanvas,[shapes, currentShape])
+  useEffect(redrawBaseCanvas, [shapes, currentShape]);
 
-  useEffect(redrawTempCanvas, [currentShape])
-
+  useEffect(redrawTempCanvas, [currentShape]);
 
   return (
     <div className="canvas-container">
@@ -217,9 +292,13 @@ export function App() {
           }}
         />
 
-        <input type="number" value={selectedWidth} onChange={(event) => {
-          setWidth(Math.max(Math.min(maxLineWidth, event.target.value), 1))
-        }}/>
+        <input
+          type="number"
+          value={selectedWidth}
+          onChange={(event) => {
+            setWidth(Math.max(Math.min(maxLineWidth, event.target.value), 1));
+          }}
+        />
         <button className="clear-canvas" onClick={clearCanvas}>
           Clear All
         </button>
@@ -274,41 +353,71 @@ export function App() {
           />
           <p>Eraser</p>
         </div>
+        <div className="tool-container">
+          <input
+            type="radio"
+            name="selected-tool"
+            onChange={() => {
+              setSelectedTool("text");
+            }}
+          />
+          <p>Text</p>
+        </div>
+        <input
+          type="text"
+          onKeyDown={(event) => {
+            if (event.key === "Enter") {
+              event.target.blur();
+            }
+          }}
+          onBlur={() => {
+            console.log("trigged");
+          }}
+        />
       </div>
+
       <div>
-      <canvas
-        ref={baseCanvasRef}
-        width={window.innerWidth}
-        height={window.innerHeight}
-        className="canvas base-canvas"
-        style={{position: 'absolute', zIndex: 1}}
-      />
+        <canvas
+          ref={baseCanvasRef}
+          width={window.innerWidth}
+          height={window.innerHeight}
+          className="canvas base-canvas"
+          style={{ position: "absolute", zIndex: 1 }}
+        />
 
-      <canvas
-      ref={tempCanvasRef}
-      width={window.innerWidth}
-      height={window.innerHeight}
-      className="canvas temp-canvas"
-      style={{position: 'absolute', zIndex: 2}}
-      onMouseDown={(event) => {
-        const canvas = baseCanvasRef.current
-        const rect = canvas.getBoundingClientRect();
-        const x = event.clientX - rect.left;
-        const y = event.clientY - rect.top;
-        startShape(x, y);
-      }}
-      onMouseMove={(event) => {
-        const canvas = baseCanvasRef.current
-        const rect = canvas.getBoundingClientRect();
-        const x = event.clientX - rect.left;
-        const y = event.clientY - rect.top;
-
-        updateShape(x, y)
-      }}
-      onMouseUp={() => {
-        finishShape()
-      }}
-      />
+        <canvas
+          ref={tempCanvasRef}
+          width={window.innerWidth}
+          height={window.innerHeight}
+          className="canvas temp-canvas"
+          style={{ position: "absolute", zIndex: 2 }}
+          onMouseDown={(event) => {
+            const canvas = baseCanvasRef.current;
+            const rect = canvas.getBoundingClientRect();
+            const x = event.clientX - rect.left;
+            const y = event.clientY - rect.top;
+            startShape(x, y);
+          }}
+          onMouseMove={(event) => {
+            if (selectedTool !== "text") {
+              const canvas = baseCanvasRef.current;
+              const rect = canvas.getBoundingClientRect();
+              const x = event.clientX - rect.left;
+              const y = event.clientY - rect.top;
+              updateShape(x, y);
+            }
+          }}
+          onMouseUp={() => {
+            if (selectedTool !== "text") {
+              finishShape();
+            }
+          }}
+          onClick={(event) => {
+            if (selectedTool === "text") {
+              textInsertion(event.clientX, event.clientY);
+            }
+          }}
+        />
       </div>
     </div>
   );
