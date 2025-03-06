@@ -3,7 +3,8 @@ import { hip } from "./math";
 export function getShapeFunctions(
   dispatchShapes,
   currentShape,
-  setCurrentShape
+  setCurrentShape,
+  lastAction
 ) {
   function startShape(x, y, selectedColor, selectedWidth, selectedTool) {
     let newShape = null;
@@ -123,6 +124,7 @@ export function getShapeFunctions(
       updatedText.content = input.value;
 
       //finishShape for textInsertion
+      lastAction.current = "add";
       dispatchShapes({ type: "add", shape: updatedText });
       setCurrentShape(null);
       input.remove();
@@ -140,7 +142,7 @@ export function getShapeFunctions(
     if (currentShape.type === "eraser") {
       currentShape.border = false;
     }
-
+    lastAction.current = "add";
     dispatchShapes({ type: "add", shape: currentShape });
     setCurrentShape(null);
   }

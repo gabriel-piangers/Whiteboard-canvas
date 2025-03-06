@@ -5,7 +5,7 @@
 }
 
 .base-canvas {
-  background-color: antiquewhite;
+  background-color: rgb(245, 242, 238);
 }
 
 .canvas-container {
@@ -21,7 +21,7 @@
   top: 0;
   left: 0;
   z-index: 3;
-  background-color: antiquewhite;
+  background-color: rgb(245, 242, 238);
 }
 
 #canvas-input:focus {
@@ -31,8 +31,18 @@
 .tools-bar {
   display: flex;
   flex-direction: column;
+  gap: 4px;
 }
 
 .tool-container {
   display: flex;
+}
+
+.undo-redo-container {
+  display: flex;
+  gap: 6px;
+}
+
+.undo-redo-button {
+  padding: 2px 6px;
 }

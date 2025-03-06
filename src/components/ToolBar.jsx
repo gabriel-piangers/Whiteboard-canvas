@@ -1,7 +1,8 @@
 import { useToolsContext } from "./ToolsContext";
 import { ToolContainer } from "./ToolContainer";
+import { undo, redo } from "../scripts/history";
 
-export function ToolBar({ dispatchShapes }) {
+export function ToolBar({ dispatchShapes, lastAction }) {
   const { selectedColor, setColor, selectedWidth, setWidth, setSelectedTool } =
     useToolsContext();
   const maxLineWidth = 30;
@@ -27,6 +28,7 @@ export function ToolBar({ dispatchShapes }) {
       <button
         className="clear-canvas"
         onClick={() => {
+          lastAction.current = "clear";
           dispatchShapes({ type: "clear" });
         }}
       >
@@ -38,6 +40,27 @@ export function ToolBar({ dispatchShapes }) {
       <ToolContainer name={"circle"} setSelectedTool={setSelectedTool} />
       <ToolContainer name={"eraser"} setSelectedTool={setSelectedTool} />
       <ToolContainer name={"text"} setSelectedTool={setSelectedTool} />
+
+      <div className="undo-redo-container">
+        <button
+          className="undo-redo-button"
+          onClick={() => {
+            const newShapes = undo();
+            dispatchShapes({ type: "set", shapes: newShapes });
+          }}
+        >
+          undo
+        </button>
+        <button
+          className="undo-redo-button"
+          onClick={() => {
+            const newShapes = redo();
+            dispatchShapes({ type: "set", shapes: newShapes });
+          }}
+        >
+          redo
+        </button>
+      </div>
     </div>
   );
 }

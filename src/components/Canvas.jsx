@@ -1,13 +1,13 @@
 import { useRef, useEffect, useState } from "react";
-import { getShapeFunctions } from "../utils/shapeFunctions";
-import { getRedrawFunctions } from "../utils/redrawFunctions";
+import { getShapeFunctions } from "../scripts/shapeFunctions";
+import { getRedrawFunctions } from "../scripts/redrawFunctions";
 import { useToolsContext } from "./ToolsContext";
 
-export function Canvas({ shapes, dispatchShapes }) {
+export function Canvas({ shapes, dispatchShapes, lastAction }) {
   const [currentShape, setCurrentShape] = useState(null);
 
   const { startShape, textInsertion, updateShape, finishShape } =
-    getShapeFunctions(dispatchShapes, currentShape, setCurrentShape);
+    getShapeFunctions(dispatchShapes, currentShape, setCurrentShape, lastAction);
 
   const { redrawBaseCanvas, redrawTempCanvas } = getRedrawFunctions(
     shapes,
