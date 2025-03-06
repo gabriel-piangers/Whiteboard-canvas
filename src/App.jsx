@@ -44,7 +44,9 @@ export function App() {
   return (
     <div className="canvas-container">
       <ToolsProvider>
+        <div className="tools-bar-container">
         <ToolBar dispatchShapes={dispatchShapes} lastAction={lastAction} />
+        </div>
 
         <Canvas
           shapes={shapes}

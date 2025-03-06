@@ -1,11 +1,8 @@
 export function ToolContainer({ name, setSelectedTool }) {
-  function capitalize(str) {
-    return str.charAt(0).toUpperCase() + str.slice(1);
-  }
-
   return (
-    <div className="tool-container">
+    <div className={`tool-container`}>
       <input
+        className={`tool-input tool-bar-option ${name}-tool`}
         type="radio"
         defaultChecked={name === "pen" ? true : false}
         name="selected-tool"
@@ -13,7 +10,6 @@ export function ToolContainer({ name, setSelectedTool }) {
           setSelectedTool(name);
         }}
       />
-      <p>{capitalize(name)}</p>
     </div>
   );
 }

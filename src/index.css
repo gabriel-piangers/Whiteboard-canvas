@@ -4,6 +4,8 @@
   border: 0;
 }
 
+/* Canvas */
+
 .base-canvas {
   background-color: rgb(245, 242, 238);
 }
@@ -28,21 +30,133 @@
   outline: none;
 }
 
+/* Tools Bar */
+
+.tools-bar-container {
+  position: fixed;
+  z-index: 10;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
 .tools-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 4.5rem;
+  background-color: white;
+  border-radius: 10px;
+  align-items: center;
+  padding: 1rem 0;
+  margin-left: 0.5rem;
+}
+
+.tool-container {
+  display: flex;
+  
+}
+
+.color-picker-container {
+  position: relative;
+  display: inline-block;
+}
+
+.color-preview {
+  display: block;
+  width: 2rem;
+  height: 2rem;
+  background-color: rgb(226, 12, 12);
+  border: 3px solid #000000;
+  box-shadow: inset 0 0 6px rgba(0,0,0, 0.4);
+  border-radius: 50%;
+  cursor: pointer;
+
+}
+
+.color-preview:hover {
+  border-color: #ec9615;
+  box-shadow: inset 0 0 4px #ec9615;
+}
+
+.color-input {
+  position: absolute;
+  width: 0;
+  height: 0;
+  opacity: 0;
+
+}
+
+.clear-button {
+  width: 2.5rem;
+  height: 2.5rem;
+  background: none;
+  border: 2px solid #636363;
+  border-radius: 6px;
+
+}
+
+.tool-input {
+  appearance: none;
+  width: 2.5rem;
+  height: 2.5rem;
+  background-size: 80%;
+  background-repeat: no-repeat;
+  background-position: center;
+  cursor: pointer;
+  border: 2px solid #646464;
+  border-radius: 6px;
+}
+
+.tool-bar-option:hover {
+  border: 2px solid #ec9615;
+  box-shadow: inset 0 0 5px #ec9615;
+}
+
+.tool-bar-option:checked {
+  border: 2px solid #ec9615;
+  box-shadow: inset 0 0 5px #ec9615;
+}
+
+.tool-bar-option:active {
+  border: 2px solid #c57d11;
+  box-shadow: inset 0 0 5px #c57d11;
+}
+
+.pen-tool {
+  background-image: url(../images/pen-tool.svg);
+}
+
+.line-tool {
+  background-image: url(../images/slash.svg);
+}
+
+.rectangle-tool {
+  background-image: url(../images/square.svg);
+}
+
+.circle-tool {
+  background-image: url(../images/circle.svg);
+}
+
+.eraser-tool {
+  background-image: url(../images/eraser.svg);
+}
+
+.text-tool {
+  background-image: url(../images/type.svg);
+}
+
+.undo-redo-container {
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
 
-.tool-container {
-  display: flex;
-}
-
-.undo-redo-container {
-  display: flex;
-  gap: 6px;
-}
-
 .undo-redo-button {
-  padding: 2px 6px;
+  background: none;
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 2px solid #636363;
+  border-radius: 6px;
+  cursor: pointer;
 }

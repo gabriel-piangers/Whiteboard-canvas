@@ -1,38 +1,27 @@
 import { useToolsContext } from "./ToolsContext";
 import { ToolContainer } from "./ToolContainer";
 import { undo, redo } from "../scripts/history";
+import { UndoIcon, RedoIcon } from "lucide-react";
+import { ColorPicker } from "./ColorPicker";
+import WidthSelector from "./WidthSelector";
 
 export function ToolBar({ dispatchShapes, lastAction }) {
   const { selectedColor, setColor, selectedWidth, setWidth, setSelectedTool } =
     useToolsContext();
-  const maxLineWidth = 30;
 
   return (
     <div className="tools-bar">
-      <input
-        type="color"
-        value={selectedColor}
-        className="color-selector"
-        onChange={(event) => {
-          setColor(event.target.value);
-        }}
-      />
+      <ColorPicker selectedColor={selectedColor} setColor={setColor}/>
 
-      <input
-        type="number"
-        value={selectedWidth}
-        onChange={(event) => {
-          setWidth(Math.max(Math.min(maxLineWidth, event.target.value), 1));
-        }}
-      />
+      <WidthSelector selectedWidth={selectedWidth} setWidth={setWidth}/>
       <button
-        className="clear-canvas"
+        className="clear-button tool-bar-option"
         onClick={() => {
           lastAction.current = "clear";
           dispatchShapes({ type: "clear" });
         }}
       >
-        Clear All
+        Clear
       </button>
       <ToolContainer name={"pen"} setSelectedTool={setSelectedTool} />
       <ToolContainer name={"line"} setSelectedTool={setSelectedTool} />
@@ -43,22 +32,22 @@ export function ToolBar({ dispatchShapes, lastAction }) {
 
       <div className="undo-redo-container">
         <button
-          className="undo-redo-button"
+          className="undo-redo-button tool-bar-option"
           onClick={() => {
             const newShapes = undo();
             dispatchShapes({ type: "set", shapes: newShapes });
           }}
         >
-          undo
+          <UndoIcon />
         </button>
         <button
-          className="undo-redo-button"
+          className="undo-redo-button tool-bar-option"
           onClick={() => {
             const newShapes = redo();
             dispatchShapes({ type: "set", shapes: newShapes });
           }}
         >
-          redo
+          <RedoIcon />
         </button>
       </div>
     </div>
