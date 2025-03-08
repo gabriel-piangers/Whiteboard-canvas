@@ -2,6 +2,7 @@ import { useRef, useEffect, useState } from "react";
 import { getShapeFunctions } from "../scripts/shapeFunctions";
 import { getRedrawFunctions } from "../scripts/redrawFunctions";
 import { useToolsContext } from "./ToolsContext";
+import { ZoomBar } from "./ZoomBar";
 
 export function Canvas({ shapes, dispatchShapes, lastAction }) {
   const [currentShape, setCurrentShape] = useState(null);
@@ -9,10 +10,11 @@ export function Canvas({ shapes, dispatchShapes, lastAction }) {
     x: window.innerWidth,
     y: window.innerHeight,
   });
-  const scaleRef = useRef(1);
+
+  const [scale, setScale] = useState(1);
   const offsetXRef = useRef(0);
   const offsetYRef = useRef(0);
-  const maxZoom = 10;
+  const maxZoom = 5;
   const minZoom = 0.1;
 
   const { startShape, textInsertion, updateShape, finishShape } =
@@ -47,30 +49,19 @@ export function Canvas({ shapes, dispatchShapes, lastAction }) {
   useEffect(() => {
     const handleZoom = (event) => {
       event.preventDefault();
-
-      if (!baseCanvasRef.current) return;
-
-      const rect = baseCanvasRef.current.getBoundingClientRect();
-      const mouseX = event.clientX - rect.left;
-      const mouseY = event.clientY - rect.top;
-
-      //converts mouse coords to the canvas coords
-      const canvasX = (mouseX - offsetXRef.current) / scaleRef.current;
-      const canvasY = (mouseY - offsetYRef.current) / scaleRef.current;
-
       const zoom = event.deltaY < 0 ? 1.1 : 0.9;
-      if (
-        (zoom > 1 && scaleRef.current < maxZoom) ||
-        (zoom < 1 && scaleRef.current > minZoom)
-      ) {
-        scaleRef.current *= zoom;
+      let newScale = scale * zoom;
 
-        //adjust offset to centralize the mouse position
-        offsetXRef.current = mouseX - canvasX * scaleRef.current;
-        offsetYRef.current = mouseY - canvasY * scaleRef.current;
+      if (newScale < minZoom) newScale = minZoom;
+      if (newScale > maxZoom) newScale = maxZoom;
+      setScale(newScale);
 
-        redrawBaseCanvas(baseCanvasRef, offsetXRef, offsetYRef, scaleRef);
-      }
+      const [mouseX, mouseY] = getMouseCoords(event);
+      const [canvasX, canvasY] = getCanvasCoords(event);
+
+      //adjust offset to centralize the mouse position
+      offsetXRef.current = mouseX - canvasX * newScale;
+      offsetYRef.current = mouseY - canvasY * newScale;
     };
 
     window.addEventListener("wheel", handleZoom, { passive: false });
@@ -81,12 +72,12 @@ export function Canvas({ shapes, dispatchShapes, lastAction }) {
   });
 
   useEffect(() => {
-    redrawBaseCanvas(baseCanvasRef, offsetXRef, offsetYRef, scaleRef);
-  }, [shapes, currentShape, redrawBaseCanvas]);
+    redrawBaseCanvas(baseCanvasRef, offsetXRef, offsetYRef, scale);
+  }, [shapes, currentShape, redrawBaseCanvas, scale]);
 
   useEffect(() => {
-    redrawTempCanvas(tempCanvasRef, offsetXRef, offsetYRef, scaleRef);
-  }, [currentShape, redrawTempCanvas]);
+    redrawTempCanvas(tempCanvasRef, offsetXRef, offsetYRef, scale);
+  }, [currentShape, redrawTempCanvas, scale]);
 
   function getMouseCoords(event) {
     const canvas = baseCanvasRef.current;
@@ -101,8 +92,8 @@ export function Canvas({ shapes, dispatchShapes, lastAction }) {
   function getCanvasCoords(event) {
     const [mouseX, mouseY] = getMouseCoords(event);
 
-    const canvasX = (mouseX - offsetXRef.current) / scaleRef.current;
-    const canvasY = (mouseY - offsetYRef.current) / scaleRef.current;
+    const canvasX = (mouseX - offsetXRef.current) / scale;
+    const canvasY = (mouseY - offsetYRef.current) / scale;
 
     return [canvasX, canvasY];
   }
@@ -137,8 +128,8 @@ export function Canvas({ shapes, dispatchShapes, lastAction }) {
             );
           } else if (event.button === 2) {
             panning = {
-              startX: canvasX * scaleRef.current,
-              startY: canvasY * scaleRef.current,
+              startX: canvasX * scale,
+              startY: canvasY * scale,
             };
           }
         }}
@@ -148,7 +139,7 @@ export function Canvas({ shapes, dispatchShapes, lastAction }) {
             offsetXRef.current = mouseX - panning.startX;
             offsetYRef.current = mouseY - panning.startY;
 
-            redrawBaseCanvas(baseCanvasRef, offsetXRef, offsetYRef, scaleRef);
+            redrawBaseCanvas(baseCanvasRef, offsetXRef, offsetYRef, scale);
           } else {
             const [canvasX, canvasY] = getCanvasCoords(event);
             if (selectedTool !== "text") {
@@ -164,9 +155,9 @@ export function Canvas({ shapes, dispatchShapes, lastAction }) {
           }
         }}
         onClick={(event) => {
-          const [canvasX, canvasY] = getCanvasCoords(event);
+          const [mouseX, mouseY] = getMouseCoords(event);
           if (selectedTool === "text") {
-            textInsertion(canvasX, canvasY);
+            textInsertion(mouseX, mouseY, scale);
           }
         }}
         onContextMenu={(event) => {
@@ -174,6 +165,8 @@ export function Canvas({ shapes, dispatchShapes, lastAction }) {
           return false;
         }}
       />
+
+      <ZoomBar scale={scale} setScale={setScale}/>
     </div>
   );
 }

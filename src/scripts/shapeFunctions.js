@@ -67,6 +67,7 @@ export function getShapeFunctions(
           startY: y,
           content: "",
           font: "16px Arial",
+          fontSize: 16,
           color: selectedColor,
           textAlign: "left",
           textBaseLine: "bottom",
@@ -109,18 +110,19 @@ export function getShapeFunctions(
     setCurrentShape(updatedShape);
   }
 
-  function textInsertion(x, y) {
+  function textInsertion(x, y, scale) {
     const input = document.createElement("input");
     input.id = "canvas-input";
     input.type = "text";
     input.style.left = `${x}px`;
     input.style.top = `${y}px`;
     input.style.font = currentShape.font;
-
+    input.style.color = currentShape.color
+    input.style.fontSize = `${currentShape.fontSize * scale}px`
     document.body.appendChild(input);
 
-    let updatedText = { ...currentShape };
     input.onblur = () => {
+      let updatedText = { ...currentShape };
       updatedText.content = input.value;
 
       //finishShape for textInsertion
@@ -129,7 +131,6 @@ export function getShapeFunctions(
       setCurrentShape(null);
       input.remove();
     };
-
     input.onkeydown = (event) => {
       if (event.key === "Enter") {
         input.blur();

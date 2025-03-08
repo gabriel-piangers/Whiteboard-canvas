@@ -22,7 +22,7 @@
   position: absolute;
   top: 0;
   left: 0;
-  z-index: 3;
+  z-index: 10;
   background-color: rgb(245, 242, 238);
 }
 
@@ -36,6 +36,7 @@
   position: fixed;
   z-index: 10;
   top: 50%;
+  left: 10px;
   transform: translateY(-50%);
 }
 
@@ -48,12 +49,11 @@
   border-radius: 10px;
   align-items: center;
   padding: 1rem 0;
-  margin-left: 0.5rem;
+  box-shadow: 0 0 6px rgba(0, 0, 0, 0.4);
 }
 
 .tool-container {
   display: flex;
-  
 }
 
 .color-picker-container {
@@ -67,10 +67,9 @@
   height: 2rem;
   background-color: rgb(226, 12, 12);
   border: 3px solid #000000;
-  box-shadow: inset 0 0 6px rgba(0,0,0, 0.4);
+  box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.4);
   border-radius: 50%;
   cursor: pointer;
-
 }
 
 .color-preview:hover {
@@ -83,7 +82,6 @@
   width: 0;
   height: 0;
   opacity: 0;
-
 }
 
 .clear-button {
@@ -92,7 +90,6 @@
   background: none;
   border: 2px solid #636363;
   border-radius: 6px;
-
 }
 
 .tool-input {
@@ -159,4 +156,44 @@
   border: 2px solid #636363;
   border-radius: 6px;
   cursor: pointer;
+}
+
+.zoom-bar-container {
+  position: fixed;
+  z-index: 10;
+  top: calc(100% - 10px);
+  left: calc(100% - 10px);
+  transform: translateY(-100%) translateX(-100%);
+}
+
+.zoom-bar {
+  display: flex;
+  gap: 8px;
+  padding: 0.5rem;
+  background-color: rgb(255, 255, 255);
+  border-radius: 10px;
+  box-shadow: 0 0 6px rgba(0, 0, 0, 0.4);
+}
+
+.zoom-out-button {
+  background-image: url(../images/minus.svg);
+  width: 2rem;
+  height: 2rem;
+  background-color: white;
+}
+
+.zoom-in-button {
+  background-image: url(../images/plus.svg);
+  width: 2rem;
+  height: 2rem;
+  background-color: white;
+}
+
+.zoom-preview {
+  width: 60px;
+  font-size: 1rem;
+  font-weight: 800;
+  text-align: center;
+  margin-top: auto;
+  margin-bottom: auto;
 }

@@ -1,5 +1,5 @@
 export function getRedrawFunctions(shapes, currentShape) {
-  function redrawBaseCanvas(baseCanvasRef, offsetXRef, offsetYRef, scaleRef) {
+  function redrawBaseCanvas(baseCanvasRef, offsetXRef, offsetYRef, scale) {
     if (currentShape !== null && currentShape.type !== "eraser") {
       return;
     }
@@ -10,14 +10,14 @@ export function getRedrawFunctions(shapes, currentShape) {
     ctx.setTransform(1, 0, 0, 1, 0, 0); // Resets the transform
     ctx.clearRect(0, 0, baseCanvasRef.current.width, baseCanvasRef.current.height);
     ctx.translate(offsetXRef.current, offsetYRef.current);
-    ctx.scale(scaleRef.current, scaleRef.current);
+    ctx.scale(scale, scale);
 
     [...shapes, currentShape]
       .filter(Boolean)
       .forEach((shape) => drawShape(ctx, shape));
   }
 
-  function redrawTempCanvas(tempCanvasRef, offsetXRef, offsetYRef, scaleRef) {
+  function redrawTempCanvas(tempCanvasRef, offsetXRef, offsetYRef, scale) {
     const canvas = tempCanvasRef.current;
     if (!canvas) return;
 
@@ -26,7 +26,7 @@ export function getRedrawFunctions(shapes, currentShape) {
     ctx.setTransform(1, 0, 0, 1, 0, 0); // Resets the transform
     ctx.clearRect(0, 0, tempCanvasRef.current.width, tempCanvasRef.current.height);
     ctx.translate(offsetXRef.current, offsetYRef.current);
-    ctx.scale(scaleRef.current, scaleRef.current);
+    ctx.scale(scale, scale);
 
     drawShape(ctx, currentShape);
   }
