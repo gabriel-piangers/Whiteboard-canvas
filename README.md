@@ -2,13 +2,17 @@
 
 A versatile digital drawing application featuring:
 
-### [try it out](https://webcanvas.vercel.app/)
-
 -  **Drawing Tools** – Pen, line, rectangle, and circle shapes
 -  **Text Tool** – Add text annotations to your canvas
 -  **Eraser** – Remove unwanted elements
 -  **Zoom & Pan** – Navigate easily around large canvases
 -  **Undo/Redo** – Track changes with complete history support
+
+<div>
+  <a href="https://webcanvas.vercel.app/">
+    <strong>View Live Demo →</strong>
+  </a>
+</div>
 
 ## About This Project
 This project was built to create a web-based drawing application similar to MS Paint, but with modern features and a responsive interface. It demonstrates advanced canvas manipulation techniques and state management in React.
@@ -51,11 +55,7 @@ Through this project, I gained experience with:
 - Create predefined shape templates
 - Single-user persistence (save/load functionality)
 
-## 👥 Contributions are Welcome
-Pull requests, suggestions, comments, and bug fixes are warmly welcomed! Feel free to open an issue to discuss potential improvements or report any bugs you encounter. This project is a learning journey, and I value community input to make it even better.
-I'll add a section welcoming contributions to your project:
-
-## 👥 Contributions Welcome
+## Contributions Welcome
 Pull requests, suggestions, comments, and bug fixes are warmly welcomed! Feel free to open an issue to discuss potential improvements or report any bugs you encounter. This project is a learning journey, and I value community input to make it even better.
 
 If you'd like to contribute:
