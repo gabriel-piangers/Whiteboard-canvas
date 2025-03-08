@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState, useCallback } from "react";
+import { useRef, useEffect, useState } from "react";
 import { getShapeFunctions } from "../scripts/shapeFunctions";
 import { getRedrawFunctions } from "../scripts/redrawFunctions";
 import { useToolsContext } from "./ToolsContext";
@@ -12,6 +12,8 @@ export function Canvas({ shapes, dispatchShapes, lastAction }) {
   const scaleRef = useRef(1);
   const offsetXRef = useRef(0);
   const offsetYRef = useRef(0);
+  const maxZoom = 10;
+  const minZoom = 0.1;
 
   const { startShape, textInsertion, updateShape, finishShape } =
     getShapeFunctions(
@@ -42,29 +44,6 @@ export function Canvas({ shapes, dispatchShapes, lastAction }) {
     };
   }, []);
 
-  const applyTransform = useCallback(() => {
-    const baseCanvas = baseCanvasRef.current;
-    const tempCanvas = tempCanvasRef.current;
-
-    if (!baseCanvas || !tempCanvas) return;
-
-    const baseCtx = baseCanvasRef.current.getContext("2d");
-    const tempCtx = tempCanvasRef.current.getContext("2d");
-
-    baseCtx.setTransform(1, 0, 0, 1, 0, 0); // Resets the transform
-    baseCtx.clearRect(0, 0, baseCanvas.width, baseCanvas.height);
-    baseCtx.translate(offsetXRef.current, offsetYRef.current);
-    baseCtx.scale(scaleRef.current, scaleRef.current);
-
-    tempCtx.setTransform(1, 0, 0, 1, 0, 0); // Resets the transform
-    tempCtx.clearRect(0, 0, tempCanvas.width, tempCanvas.height);
-    tempCtx.translate(offsetXRef.current, offsetYRef.current);
-    tempCtx.scale(scaleRef.current, scaleRef.current);
-
-    redrawTempCanvas(tempCanvasRef);
-    redrawBaseCanvas(baseCanvasRef);
-  }, [shapes, currentShape, redrawBaseCanvas, redrawTempCanvas]);
-
   useEffect(() => {
     const handleZoom = (event) => {
       event.preventDefault();
@@ -80,13 +59,18 @@ export function Canvas({ shapes, dispatchShapes, lastAction }) {
       const canvasY = (mouseY - offsetYRef.current) / scaleRef.current;
 
       const zoom = event.deltaY < 0 ? 1.1 : 0.9;
-      scaleRef.current *= zoom;
+      if (
+        (zoom > 1 && scaleRef.current < maxZoom) ||
+        (zoom < 1 && scaleRef.current > minZoom)
+      ) {
+        scaleRef.current *= zoom;
 
-      //adjust offset to centralize the mouse position
-      offsetXRef.current = mouseX - canvasX * scaleRef.current;
-      offsetYRef.current = mouseY - canvasY * scaleRef.current;
+        //adjust offset to centralize the mouse position
+        offsetXRef.current = mouseX - canvasX * scaleRef.current;
+        offsetYRef.current = mouseY - canvasY * scaleRef.current;
 
-      applyTransform();
+        redrawBaseCanvas(baseCanvasRef, offsetXRef, offsetYRef, scaleRef);
+      }
     };
 
     window.addEventListener("wheel", handleZoom, { passive: false });
@@ -97,12 +81,12 @@ export function Canvas({ shapes, dispatchShapes, lastAction }) {
   });
 
   useEffect(() => {
-    redrawBaseCanvas(baseCanvasRef);
+    redrawBaseCanvas(baseCanvasRef, offsetXRef, offsetYRef, scaleRef);
   }, [shapes, currentShape, redrawBaseCanvas]);
 
   useEffect(() => {
-    redrawTempCanvas(tempCanvasRef);
-  }, [currentShape, redrawTempCanvas, scaleRef]);
+    redrawTempCanvas(tempCanvasRef, offsetXRef, offsetYRef, scaleRef);
+  }, [currentShape, redrawTempCanvas]);
 
   function getMouseCoords(event) {
     const canvas = baseCanvasRef.current;
@@ -164,7 +148,7 @@ export function Canvas({ shapes, dispatchShapes, lastAction }) {
             offsetXRef.current = mouseX - panning.startX;
             offsetYRef.current = mouseY - panning.startY;
 
-            applyTransform();
+            redrawBaseCanvas(baseCanvasRef, offsetXRef, offsetYRef, scaleRef);
           } else {
             const [canvasX, canvasY] = getCanvasCoords(event);
             if (selectedTool !== "text") {
@@ -180,8 +164,8 @@ export function Canvas({ shapes, dispatchShapes, lastAction }) {
           }
         }}
         onClick={(event) => {
+          const [canvasX, canvasY] = getCanvasCoords(event);
           if (selectedTool === "text") {
-            const [canvasX, canvasY] = getCanvasCoords(event);
             textInsertion(canvasX, canvasY);
           }
         }}
