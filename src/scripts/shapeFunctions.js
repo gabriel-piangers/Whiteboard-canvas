@@ -139,6 +139,8 @@ export function getShapeFunctions(
   }
 
   function finishShape() {
+    if (!currentShape) return;
+
     if (currentShape.type === "eraser") {
       currentShape.border = false;
     }
