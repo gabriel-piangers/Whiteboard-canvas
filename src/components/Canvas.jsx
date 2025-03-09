@@ -48,6 +48,7 @@ export function Canvas({ shapes, dispatchShapes, lastAction }) {
 
   useEffect(() => {
     const handleZoom = (event) => {
+      if (currentShape) return
       event.preventDefault();
       const zoom = event.deltaY < 0 ? 1.1 : 0.9;
       let newScale = scale * zoom;
