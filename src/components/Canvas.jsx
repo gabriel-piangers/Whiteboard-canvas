@@ -3,6 +3,8 @@ import { getShapeFunctions } from "../scripts/shapeFunctions";
 import { getRedrawFunctions } from "../scripts/redrawFunctions";
 import { useToolsContext } from "./ToolsContext";
 import { ZoomBar } from "./ZoomBar";
+import { TextOptions } from "./TextOptions";
+import { TextInput } from "./TextInput";
 
 export function Canvas({ shapes, dispatchShapes, lastAction }) {
   const [currentShape, setCurrentShape] = useState(null);
@@ -17,13 +19,12 @@ export function Canvas({ shapes, dispatchShapes, lastAction }) {
   const maxZoom = 5;
   const minZoom = 0.1;
 
-  const { startShape, textInsertion, updateShape, finishShape } =
-    getShapeFunctions(
-      dispatchShapes,
-      currentShape,
-      setCurrentShape,
-      lastAction
-    );
+  const { startShape, startText, updateShape, finishShape } = getShapeFunctions(
+    dispatchShapes,
+    currentShape,
+    setCurrentShape,
+    lastAction
+  );
 
   const { redrawBaseCanvas, redrawTempCanvas } = getRedrawFunctions(
     shapes,
@@ -34,6 +35,21 @@ export function Canvas({ shapes, dispatchShapes, lastAction }) {
   const tempCanvasRef = useRef(null);
 
   const { selectedTool, selectedColor, selectedWidth } = useToolsContext();
+
+  const defaultTextOptions = {
+    active: false,
+    x: 222,
+    y: 222,
+    font: "Arial",
+    size: 16,
+    color: "black",
+    align: "left",
+    bold: false,
+    italic: false,
+    underline: false,
+  };
+  const [inputValue, setInputValue] = useState("");
+  const [textOptions, setTextOptions] = useState(defaultTextOptions);
 
   useEffect(() => {
     const handleResize = () => {
@@ -48,7 +64,7 @@ export function Canvas({ shapes, dispatchShapes, lastAction }) {
 
   useEffect(() => {
     const handleZoom = (event) => {
-      if (currentShape) return
+      if (currentShape) return;
       event.preventDefault();
       const zoom = event.deltaY < 0 ? 1.1 : 0.9;
       let newScale = scale * zoom;
@@ -119,7 +135,7 @@ export function Canvas({ shapes, dispatchShapes, lastAction }) {
         style={{ position: "absolute", zIndex: 2 }}
         onMouseDown={(event) => {
           const [canvasX, canvasY] = getCanvasCoords(event);
-          if (event.button === 0  && selectedTool !== 'text') {
+          if (event.button === 0 && selectedTool !== "text") {
             startShape(
               canvasX,
               canvasY,
@@ -159,7 +175,14 @@ export function Canvas({ shapes, dispatchShapes, lastAction }) {
           const [mouseX, mouseY] = getMouseCoords(event);
           const [canvasX, canvasY] = getCanvasCoords(event);
           if (selectedTool === "text") {
-            textInsertion(mouseX, mouseY, canvasX, canvasY, selectedColor, scale);
+            const newTextOptions = {
+              ...textOptions,
+              active: true,
+              x: mouseX,
+              y: mouseY,
+            };
+            setTextOptions(newTextOptions);
+            startText(canvasX, canvasY, newTextOptions);
           }
         }}
         onContextMenu={(event) => {
@@ -167,8 +190,49 @@ export function Canvas({ shapes, dispatchShapes, lastAction }) {
           return false;
         }}
       />
-
-      <ZoomBar scale={scale} setScale={setScale}/>
+      {textOptions.active && (
+        <div
+          tabIndex={0}
+          onBlur={(e) => {
+            if (!e.currentTarget.contains(e.relatedTarget)) {
+              lastAction.current = "add";
+              const newText = {
+                ...currentShape,
+                content: inputValue,
+                font: `
+                ${textOptions.italic ? "italic" : ""}
+                ${textOptions.bold ? "bold" : ""} 
+                ${textOptions.size}px 
+                ${textOptions.font}
+                `,
+                color: textOptions.color,
+                textAlign: textOptions.align,
+                underline: textOptions.underline
+              };
+              dispatchShapes({ type: "add", shape: newText });
+              setCurrentShape(null);
+              setInputValue("");
+              setTextOptions(defaultTextOptions);
+            }
+          }}
+        >
+          <TextOptions
+            x={textOptions.x}
+            y={textOptions.y}
+            textOptions={textOptions}
+            setTextOptions={setTextOptions}
+          />
+          <TextInput
+            x={textOptions.x}
+            y={textOptions.y}
+            textOptions={textOptions}
+            scale={scale}
+            inputValue={inputValue}
+            setInputValue={setInputValue}
+          />
+        </div>
+      )}
+      <ZoomBar scale={scale} setScale={setScale} />
     </div>
   );
 }

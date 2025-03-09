@@ -55,16 +55,16 @@ export function getRedrawFunctions(shapes, currentShape) {
         ctx.beginPath();
         ctx.moveTo(shape.points[0].x, shape.points[0].y);
         for (let i = 1; i < shape.points.length; i++) {
-          const current = shape.points[i]
+          const current = shape.points[i];
           if (i === 1) {
             ctx.lineTo(current.x, current.y);
           } else {
-            const previous = shape.points[i-1]
+            const previous = shape.points[i - 1];
 
-            const midPointX = (previous.x + current.x) /2
-            const midPointY = (previous.y + current.y) /2
+            const midPointX = (previous.x + current.x) / 2;
+            const midPointY = (previous.y + current.y) / 2;
 
-            ctx.quadraticCurveTo(previous.x, previous.y, midPointX, midPointY)
+            ctx.quadraticCurveTo(previous.x, previous.y, midPointX, midPointY);
           }
         }
         ctx.stroke();
@@ -117,18 +117,30 @@ export function getRedrawFunctions(shapes, currentShape) {
 
         ctx.globalCompositeOperation = "source-over";
         break;
-      case "text":
+      case "text":{
         ctx.font = shape.font;
         ctx.fillStyle = shape.color;
-        ctx.textAlign = shape.textAlign;
-        ctx.textBaseLine = shape.textBaseLine;
+        ctx.textAlign = shape.align;
+        const textHeight = parseInt(ctx.font.match(/\d+/), 10)
+        const textWidth = ctx.measureText(shape.content).width
         ctx.fillText(
           shape.content,
           shape.startX,
-          shape.startY + parseInt(ctx.font.match(/\d+/), 10)
+          shape.startY + textHeight
         );
+        if (shape.underline) {
+          let startX = shape.startX
+          let startY = shape.startY + textHeight * 1.12
 
-        break;
+          ctx.beginPath()
+          ctx.moveTo(startX, startY)
+          ctx.lineTo(startX + textWidth, startY)
+          ctx.strokeStyle = shape.color
+          ctx.lineWidth = textHeight/12
+          ctx.stroke()
+        }
+
+        break;}
     }
   }
 
