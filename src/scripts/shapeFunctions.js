@@ -60,19 +60,6 @@ export function getShapeFunctions(
           lineWidth: selectedWidth,
         };
         break;
-      case "text":
-        newShape = {
-          type: "text",
-          startX: x,
-          startY: y,
-          content: "",
-          font: "16px Arial",
-          fontSize: 16,
-          color: selectedColor,
-          textAlign: "left",
-          textBaseLine: "bottom",
-        };
-        break;
     }
     setCurrentShape(newShape);
   }
@@ -110,19 +97,51 @@ export function getShapeFunctions(
     setCurrentShape(updatedShape);
   }
 
-  function textInsertion(x, y, scale) {
+  function textInsertion(
+    mouseX,
+    mouseY,
+    canvasX,
+    canvasY,
+    selectedColor,
+    scale
+  ) {
+    const newText = {
+      type: "text",
+      startX: canvasX,
+      startY: canvasY,
+      content: "",
+      font: "16px Arial",
+      fontSize: 16,
+      color: selectedColor,
+      textAlign: "left",
+      textBaseLine: "bottom",
+    };
+
+    function measureTextWidth(text) {
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+      ctx.font = newText.font;
+      return ctx.measureText(text).width;
+    }
+
+    setCurrentShape(newText);
+
     const input = document.createElement("input");
     input.id = "canvas-input";
     input.type = "text";
-    input.style.left = `${x}px`;
-    input.style.top = `${y}px`;
-    input.style.font = currentShape.font;
-    input.style.color = currentShape.color
-    input.style.fontSize = `${currentShape.fontSize * scale}px`
+    input.style.width = `${measureTextWidth(input.value) + 12}px`;
+    input.style.left = `${mouseX}px`;
+    input.style.top = `${mouseY}px`;
+    input.style.font = newText.font;
+    input.style.color = newText.color;
+    input.style.fontSize = `${newText.fontSize * scale}px`;
     document.body.appendChild(input);
 
+    input.oninput = () => {
+      input.style.width = `${measureTextWidth(input.value) + 12}px`;
+    };
     input.onblur = () => {
-      let updatedText = { ...currentShape };
+      let updatedText = { ...newText };
       updatedText.content = input.value;
 
       //finishShape for textInsertion

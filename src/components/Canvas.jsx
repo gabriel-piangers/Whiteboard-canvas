@@ -119,7 +119,7 @@ export function Canvas({ shapes, dispatchShapes, lastAction }) {
         style={{ position: "absolute", zIndex: 2 }}
         onMouseDown={(event) => {
           const [canvasX, canvasY] = getCanvasCoords(event);
-          if (event.button === 0) {
+          if (event.button === 0  && selectedTool !== 'text') {
             startShape(
               canvasX,
               canvasY,
@@ -157,8 +157,9 @@ export function Canvas({ shapes, dispatchShapes, lastAction }) {
         }}
         onClick={(event) => {
           const [mouseX, mouseY] = getMouseCoords(event);
+          const [canvasX, canvasY] = getCanvasCoords(event);
           if (selectedTool === "text") {
-            textInsertion(mouseX, mouseY, scale);
+            textInsertion(mouseX, mouseY, canvasX, canvasY, selectedColor, scale);
           }
         }}
         onContextMenu={(event) => {
