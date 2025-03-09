@@ -49,11 +49,12 @@ Through this project, I gained experience with:
 ## Future Plans
 - Add export functionality (PNG, SVG, PDF)
 - Implement shape selection and manipulation
-- Layers system for organizing elements
+- Add Layers system for organizing elements
+- Improve text customization
 - Implement keyboard shortcuts for common actions
 - Add image import functionality
 - Create predefined shape templates
-- Single-user persistence (save/load functionality)
+- Implement single-user persistence (save/load functionality)
 
 ## Contributions Welcome
 Pull requests, suggestions, comments, and bug fixes are warmly welcomed! Feel free to open an issue to discuss potential improvements or report any bugs you encounter. This project is a learning journey, and I value community input to make it even better.

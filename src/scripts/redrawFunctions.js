@@ -8,7 +8,12 @@ export function getRedrawFunctions(shapes, currentShape) {
 
     const ctx = canvas.getContext("2d");
     ctx.setTransform(1, 0, 0, 1, 0, 0); // Resets the transform
-    ctx.clearRect(0, 0, baseCanvasRef.current.width, baseCanvasRef.current.height);
+    ctx.clearRect(
+      0,
+      0,
+      baseCanvasRef.current.width,
+      baseCanvasRef.current.height
+    );
     ctx.translate(offsetXRef.current, offsetYRef.current);
     ctx.scale(scale, scale);
 
@@ -22,9 +27,14 @@ export function getRedrawFunctions(shapes, currentShape) {
     if (!canvas) return;
 
     const ctx = canvas.getContext("2d");
-    
+
     ctx.setTransform(1, 0, 0, 1, 0, 0); // Resets the transform
-    ctx.clearRect(0, 0, tempCanvasRef.current.width, tempCanvasRef.current.height);
+    ctx.clearRect(
+      0,
+      0,
+      tempCanvasRef.current.width,
+      tempCanvasRef.current.height
+    );
     ctx.translate(offsetXRef.current, offsetYRef.current);
     ctx.scale(scale, scale);
 
@@ -39,24 +49,25 @@ export function getRedrawFunctions(shapes, currentShape) {
 
     switch (shape.type) {
       case "freehand":
+        ctx.lineJoin = "round";
+        ctx.lineCap = "round";
+
         ctx.beginPath();
         ctx.moveTo(shape.points[0].x, shape.points[0].y);
-        for (let i = 1; i < shape.points.length - 1; i++) {
-          ctx.lineTo(shape.points[i].x, shape.points[i].y);
+        for (let i = 1; i < shape.points.length; i++) {
+          const current = shape.points[i]
+          if (i === 1) {
+            ctx.lineTo(current.x, current.y);
+          } else {
+            const previous = shape.points[i-1]
+
+            const midPointX = (previous.x + current.x) /2
+            const midPointY = (previous.y + current.y) /2
+
+            ctx.quadraticCurveTo(previous.x, previous.y, midPointX, midPointY)
+          }
         }
         ctx.stroke();
-        for (let i = 0; i < shape.points.length; i++) {
-          ctx.beginPath();
-          ctx.arc(
-            shape.points[i].x,
-            shape.points[i].y,
-            shape.lineWidth / 2,
-            0,
-            2 * Math.PI,
-            false
-          );
-          ctx.fill();
-        }
 
         break;
       case "line":
