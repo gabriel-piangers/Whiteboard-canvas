@@ -1,23 +1,23 @@
-import { useToolsContext } from "./ToolsContext";
+import { useToolsContext } from "../Providers/ToolsProvider";
 import { ToolContainer } from "./ToolContainer";
-import { undo, redo } from "../scripts/history";
-import { UndoIcon, RedoIcon } from "lucide-react";
 import { ColorPicker } from "./ColorPicker";
 import WidthSelector from "./WidthSelector";
+import { UndoRedoTool } from "./UndoRedoTools";
+import { useShapes } from "../Providers/ShapeProvider";
 
-export function ToolBar({ dispatchShapes, lastAction }) {
+export function ToolBar({ lastAction }) {
   const { selectedColor, setColor, selectedWidth, setWidth, setSelectedTool } =
     useToolsContext();
+  const { dispatchShapes } = useShapes();
 
   return (
     <div className="tools-bar">
-      <ColorPicker selectedColor={selectedColor} setColor={setColor}/>
+      <ColorPicker selectedColor={selectedColor} setColor={setColor} />
 
-      <WidthSelector selectedWidth={selectedWidth} setWidth={setWidth}/>
+      <WidthSelector selectedWidth={selectedWidth} setWidth={setWidth} />
       <button
         className="clear-button tool-bar-option"
         onClick={() => {
-          lastAction.current = "clear";
           dispatchShapes({ type: "clear" });
         }}
       >
@@ -29,27 +29,7 @@ export function ToolBar({ dispatchShapes, lastAction }) {
       <ToolContainer name={"circle"} setSelectedTool={setSelectedTool} />
       <ToolContainer name={"eraser"} setSelectedTool={setSelectedTool} />
       <ToolContainer name={"text"} setSelectedTool={setSelectedTool} />
-
-      <div className="undo-redo-container">
-        <button
-          className="undo-redo-button tool-bar-option"
-          onClick={() => {
-            const newShapes = undo();
-            dispatchShapes({ type: "set", shapes: newShapes });
-          }}
-        >
-          <UndoIcon />
-        </button>
-        <button
-          className="undo-redo-button tool-bar-option"
-          onClick={() => {
-            const newShapes = redo();
-            dispatchShapes({ type: "set", shapes: newShapes });
-          }}
-        >
-          <RedoIcon />
-        </button>
-      </div>
+      <UndoRedoTool lastAction={lastAction} />
     </div>
   );
 }

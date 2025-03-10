@@ -1,12 +1,14 @@
 import { useRef, useEffect, useState } from "react";
 import { getShapeFunctions } from "../scripts/shapeFunctions";
 import { getRedrawFunctions } from "../scripts/redrawFunctions";
-import { useToolsContext } from "./ToolsContext";
+import { useToolsContext } from "../Providers/ToolsProvider";
 import { ZoomBar } from "./ZoomBar";
 import { TextOptions } from "./TextOptions";
 import { TextInput } from "./TextInput";
+import { useShapes } from "../Providers/ShapeProvider";
+import { useHistory } from "../Providers/HistoryProvider";
 
-export function Canvas({ shapes, dispatchShapes, lastAction }) {
+export function Canvas({ lastAction }) {
   const [currentShape, setCurrentShape] = useState(null);
   const [screenSize, setScreenSize] = useState({
     x: window.innerWidth,
@@ -18,6 +20,9 @@ export function Canvas({ shapes, dispatchShapes, lastAction }) {
   const offsetYRef = useRef(0);
   const maxZoom = 5;
   const minZoom = 0.1;
+
+  const { shapes, dispatchShapes } = useShapes();
+  const { addToHistory, undo, redo } = useHistory();
 
   const { startShape, startText, updateShape, finishShape } = getShapeFunctions(
     dispatchShapes,
@@ -56,11 +61,38 @@ export function Canvas({ shapes, dispatchShapes, lastAction }) {
       setScreenSize({ x: window.innerWidth, y: window.innerHeight });
     };
 
+    const handleKeyDown = (event) => {
+      if ((event.ctrlKey || event.metaKey) && event.key === "z") {
+        event.preventDefault();
+        const newShapes = undo();
+        lastAction.current = "undo";
+        dispatchShapes({ type: "set", shapes: newShapes });
+      } else if ((event.ctrlKey || event.metaKey) && event.key === "y") {
+        event.preventDefault();
+        const newShapes = redo();
+        lastAction.current = "redo";
+        dispatchShapes({ type: "set", shapes: newShapes });
+      }
+    };
+
     window.addEventListener("resize", handleResize);
+    window.addEventListener("keydown", handleKeyDown);
     return () => {
       window.removeEventListener("resize", handleResize);
+      window.removeEventListener("keydown", handleKeyDown);
     };
   }, []);
+
+  useEffect(() => {
+    localStorage.setItem("shapes", JSON.stringify(shapes));
+
+    const noUpdate = ["undo", "redo"];
+    if (!noUpdate.includes(lastAction.current)) {
+      addToHistory([...shapes]);
+    }
+
+    lastAction.current = null;
+  }, [shapes]);
 
   useEffect(() => {
     const handleZoom = (event) => {
@@ -207,7 +239,7 @@ export function Canvas({ shapes, dispatchShapes, lastAction }) {
                 `,
                 color: textOptions.color,
                 textAlign: textOptions.align,
-                underline: textOptions.underline
+                underline: textOptions.underline,
               };
               dispatchShapes({ type: "add", shape: newText });
               setCurrentShape(null);
