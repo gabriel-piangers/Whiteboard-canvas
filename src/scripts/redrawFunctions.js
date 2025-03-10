@@ -1,8 +1,5 @@
 export function getRedrawFunctions(shapes, currentShape) {
   function redrawBaseCanvas(baseCanvasRef, offsetXRef, offsetYRef, scale) {
-    if (currentShape !== null && currentShape.type !== "eraser") {
-      return;
-    }
     const canvas = baseCanvasRef.current;
     if (!canvas) return;
 

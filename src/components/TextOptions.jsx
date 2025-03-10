@@ -1,7 +1,10 @@
 import { FontStyle } from "./FontStyle";
 import { OptionSelect } from "./OptionSelect";
+import { useEffect, useRef, useState } from "react";
 
 export function TextOptions({ x, y, textOptions, setTextOptions }) {
+  const containerRef = useRef(null);
+  const [containerWidth, setContainerWidth] = useState(0)
   const fontValues = [
     "Arial",
     "Verdana",
@@ -14,13 +17,29 @@ export function TextOptions({ x, y, textOptions, setTextOptions }) {
   ];
   const sizeValues = [10, 12, 14, 16, 18, 24, 36, 48, 64];
 
+  let translateX = "";
+  let translateY = "translateY(-50px)";
+
+  useEffect(() => {
+    if (containerRef.current) {
+      setContainerWidth(containerRef.current.offsetWidth)
+    }
+
+  }, [containerRef])
+
+  if (x > 75) translateX = "translateX(-25%)";
+  if (x > window.innerWidth - containerWidth) translateX = `translateX(-${x-(window.innerWidth - containerWidth)}px)`;
+  if (y < 50) translateY = "translateY(30px)";
+
   return (
     <div
+      ref={containerRef}
       tabIndex={0}
       className="text-option-container"
       style={{
         left: `${x}px`,
         top: `${y}px`,
+        transform: `${translateX} ${translateY}`,
       }}
     >
       <OptionSelect

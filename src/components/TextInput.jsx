@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export function TextInput({
   x,
@@ -7,8 +7,10 @@ export function TextInput({
   textOptions,
   inputValue,
   setInputValue,
+  pan,
 }) {
   const inputRef = useRef(null);
+  const [inputCoords, setInputCoords] = useState({x, y})
 
   useEffect(() => {
     if (inputRef.current) {
@@ -20,6 +22,16 @@ export function TextInput({
   useEffect(() => {
     inputRef.current.focus();
     inputRef.current.style.width = `${measureTextWidth(inputValue) + 12}px`;
+
+    const textHeight = measureTextHeight()
+    if(y+ textHeight > window.innerHeight-1) {
+      console.log('out: ', y, textHeight)
+      const panY = -(inputCoords.y + textHeight + 10*scale - window.innerHeight);
+      pan(0, panY)
+      const newCoords = {...inputCoords, y: inputCoords.y +panY}
+
+      setInputCoords(newCoords)
+    }
   }, [textOptions]);
 
   function measureTextWidth(text) {
@@ -29,11 +41,26 @@ export function TextInput({
     return ctx.measureText(text).width;
   }
 
+  function measureTextHeight() {
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+    ctx.font = `${textOptions.bold ? 'bold' : ''} ${textOptions.size * scale}px ${textOptions.font}`;
+    return  parseInt(ctx.font.match(/\d+/), 10)
+  }
+
   const handleInput = (event) => {
     setInputValue(event.target.value);
-    inputRef.current.style.width = `${
-      measureTextWidth(event.target.value) + 6 * scale
-    }px`;
+
+    const textWidth = measureTextWidth(event.target.value)
+    inputRef.current.style.width = `${textWidth + 6 * scale}px`;
+
+    if (x + textWidth > window.innerWidth-1) {
+      const panX = -(inputCoords.x + textWidth - window.innerWidth);
+      pan(panX, 0)
+      const newCoords = {...inputCoords, x: inputCoords.x +panX}
+
+      setInputCoords(newCoords)
+    }
   };
 
   const handleKeyDown = (event) => {
@@ -48,8 +75,8 @@ export function TextInput({
       type="text"
       id="canvas-input"
       style={{
-        left: `${x}px`,
-        top: `${y}px`,
+        left: `${inputCoords.x}px`,
+        top: `${inputCoords.y}px`,
         fontFamily: textOptions.font,
         color: textOptions.color,
         fontSize: `${textOptions.size * scale}px`,

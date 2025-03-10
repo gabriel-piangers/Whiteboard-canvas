@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useRef } from "react";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
 
 const HistoryContext = createContext(null);
 
@@ -6,21 +6,17 @@ export function HistoryProvider({ children }) {
   const history = useRef([]);
   const historyIndex = useRef(0);
   const initialized = useRef(false);
-
+  const [, forceUpdate] = useState({});
+  
   useEffect(() => {
-    try {
-      if (!initialized) {
-        const savedShapes = JSON.parse(localStorage.getItem("shapes") || []);
-        history.current = [savedShapes];
-        initialized.current = true;
-      }
-    } catch (error) {
-      console.error('error initializing history', error)
-      history.current = [[]]
+    if (!initialized.current && history.current.length === 0) {
+      initialized.current = true;
     }
-  });
+  }, []);
+
 
   function addToHistory(newShapes) {
+    if (!initialized.current) return
     //deletes alternative branches on the history
     if (historyIndex.current < history.current.length - 1) {
       history.current = history.current.slice(0, historyIndex.current + 1);
@@ -34,6 +30,7 @@ export function HistoryProvider({ children }) {
       history.current.shift();
       historyIndex.current--;
     }
+    forceUpdate({})
   }
 
   function undo() {
@@ -53,11 +50,13 @@ export function HistoryProvider({ children }) {
   }
 
   function canUndo() {
+    if (history.current.length === 0) return false
     if (historyIndex.current === 0) return false;
     return true;
   }
 
   function canRedo() {
+    if (history.current.length === 0) return false
     if (historyIndex.current === history.current.length - 1) return false;
     return true;
   }

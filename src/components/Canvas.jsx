@@ -147,6 +147,13 @@ export function Canvas({ lastAction }) {
     return [canvasX, canvasY];
   }
 
+  function pan(x, y) {
+    offsetXRef.current += x;
+    offsetYRef.current += y;
+    redrawBaseCanvas(baseCanvasRef, offsetXRef, offsetYRef, scale);
+    redrawTempCanvas(tempCanvasRef, offsetXRef, offsetYRef, scale);
+  }
+
   let panning = null;
 
   return (
@@ -204,9 +211,18 @@ export function Canvas({ lastAction }) {
           }
         }}
         onClick={(event) => {
-          const [mouseX, mouseY] = getMouseCoords(event);
+          let [mouseX, mouseY] = getMouseCoords(event);
           const [canvasX, canvasY] = getCanvasCoords(event);
+
           if (selectedTool === "text") {
+            if (mouseX > window.innerWidth - 20) {
+              mouseX += -20
+              pan(-20, 0)
+            }
+            if (mouseY > window.innerHeight - 20) {
+              mouseY += -20 *scale
+              pan(0, -20)
+            }
             const newTextOptions = {
               ...textOptions,
               active: true,
@@ -241,7 +257,8 @@ export function Canvas({ lastAction }) {
                 textAlign: textOptions.align,
                 underline: textOptions.underline,
               };
-              dispatchShapes({ type: "add", shape: newText });
+              if (newText.content.trim() !== "")
+                dispatchShapes({ type: "add", shape: newText });
               setCurrentShape(null);
               setInputValue("");
               setTextOptions(defaultTextOptions);
@@ -261,6 +278,7 @@ export function Canvas({ lastAction }) {
             scale={scale}
             inputValue={inputValue}
             setInputValue={setInputValue}
+            pan={pan}
           />
         </div>
       )}
