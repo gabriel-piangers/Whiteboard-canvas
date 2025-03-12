@@ -16,6 +16,7 @@ export function Canvas({ lastAction }) {
   });
 
   const [scale, setScale] = useState(1);
+  const [panning, setPanning] = useState(null);
   const offsetXRef = useRef(0);
   const offsetYRef = useRef(0);
   const maxZoom = 5;
@@ -154,7 +155,19 @@ export function Canvas({ lastAction }) {
     redrawTempCanvas(tempCanvasRef, offsetXRef, offsetYRef, scale);
   }
 
-  let panning = null;
+  function getCursor() {
+    if (currentShape && currentShape.type === "eraser") return "none";
+    if (panning) return 'url("/images/grab.svg") 0 24, auto';
+
+    switch (selectedTool) {
+      case "pen":
+        return 'url("/images/pencil.svg") 0 24, auto';
+      case "eraser":
+        return 'url("/images/eraser.svg") 0 24, auto';
+      default:
+        return "auto";
+    }
+  }
 
   return (
     <div>
@@ -171,7 +184,11 @@ export function Canvas({ lastAction }) {
         width={screenSize.x}
         height={screenSize.y}
         className="canvas temp-canvas"
-        style={{ position: "absolute", zIndex: 2 }}
+        style={{
+          position: "absolute",
+          zIndex: 2,
+          cursor: getCursor(),
+        }}
         onMouseDown={(event) => {
           const [canvasX, canvasY] = getCanvasCoords(event);
           if (event.button === 0 && selectedTool !== "text") {
@@ -183,10 +200,10 @@ export function Canvas({ lastAction }) {
               selectedTool
             );
           } else if (event.button === 2) {
-            panning = {
+            setPanning({
               startX: canvasX * scale,
               startY: canvasY * scale,
-            };
+            });
           }
         }}
         onMouseMove={(event) => {
@@ -205,7 +222,7 @@ export function Canvas({ lastAction }) {
         }}
         onMouseUp={() => {
           if (panning) {
-            panning = null;
+            setPanning(null);
           } else if (selectedTool !== "text") {
             finishShape();
           }
@@ -216,12 +233,12 @@ export function Canvas({ lastAction }) {
 
           if (selectedTool === "text") {
             if (mouseX > window.innerWidth - 20) {
-              mouseX += -20
-              pan(-20, 0)
+              mouseX += -20;
+              pan(-20, 0);
             }
             if (mouseY > window.innerHeight - 20) {
-              mouseY += -20 *scale
-              pan(0, -20)
+              mouseY += -20 * scale;
+              pan(0, -20);
             }
             const newTextOptions = {
               ...textOptions,
