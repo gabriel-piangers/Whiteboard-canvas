@@ -280,7 +280,7 @@ export function Canvas({ lastAction }) {
                 dispatchShapes({ type: "add", shape: newText });
               setCurrentShape(null);
               setInputValue("");
-              setTextOptions(defaultTextOptions);
+              setTextOptions({...textOptions, active: false});
             }
           }}
         >
