@@ -49,6 +49,21 @@ export function getRedrawFunctions(shapes, currentShape) {
         ctx.lineJoin = "round";
         ctx.lineCap = "round";
 
+        if (shape.points.length <= 1) {
+          console.log("dot");
+          ctx.beginPath();
+          ctx.arc(
+            shape.points[0].x,
+            shape.points[0].y,
+            shape.lineWidth/2,
+            0,
+            2 * Math.PI,
+            false
+          );
+          ctx.fill();
+          break;
+        }
+
         ctx.beginPath();
         ctx.moveTo(shape.points[0].x, shape.points[0].y);
         for (let i = 1; i < shape.points.length; i++) {
@@ -114,30 +129,27 @@ export function getRedrawFunctions(shapes, currentShape) {
 
         ctx.globalCompositeOperation = "source-over";
         break;
-      case "text":{
+      case "text": {
         ctx.font = shape.font;
         ctx.fillStyle = shape.color;
         ctx.textAlign = shape.align;
-        const textHeight = parseInt(ctx.font.match(/\d+/), 10)
-        const textWidth = ctx.measureText(shape.content).width
-        ctx.fillText(
-          shape.content,
-          shape.startX,
-          shape.startY + textHeight
-        );
+        const textHeight = parseInt(ctx.font.match(/\d+/), 10);
+        const textWidth = ctx.measureText(shape.content).width;
+        ctx.fillText(shape.content, shape.startX, shape.startY + textHeight);
         if (shape.underline) {
-          let startX = shape.startX
-          let startY = shape.startY + textHeight * 1.12
+          let startX = shape.startX;
+          let startY = shape.startY + textHeight * 1.12;
 
-          ctx.beginPath()
-          ctx.moveTo(startX, startY)
-          ctx.lineTo(startX + textWidth, startY)
-          ctx.strokeStyle = shape.color
-          ctx.lineWidth = textHeight/12
-          ctx.stroke()
+          ctx.beginPath();
+          ctx.moveTo(startX, startY);
+          ctx.lineTo(startX + textWidth, startY);
+          ctx.strokeStyle = shape.color;
+          ctx.lineWidth = textHeight / 12;
+          ctx.stroke();
         }
 
-        break;}
+        break;
+      }
     }
   }
 
