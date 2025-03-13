@@ -164,6 +164,8 @@ export function Canvas({ lastAction }) {
         return 'url("/images/pencil.svg") 0 24, auto';
       case "eraser":
         return 'url("/images/eraser.svg") 0 24, auto';
+      case "text":
+        return 'url("/images/text-cursor.svg") 12 12, auto';
       default:
         return "auto";
     }
