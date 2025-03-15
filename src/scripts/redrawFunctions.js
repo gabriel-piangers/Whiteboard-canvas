@@ -106,28 +106,35 @@ export function getRedrawFunctions(shapes, currentShape) {
         ctx.stroke();
         break;
       case "eraser":
+        ctx.lineJoin = "round";
+        ctx.lineCap = "round";
+        ctx.lineWidth = shape.lineWidth*2;
         ctx.globalCompositeOperation = "destination-out";
-        for (let i = 0; i < shape.points.length; i++) {
-          ctx.beginPath();
-          ctx.arc(
-            shape.points[i].x,
-            shape.points[i].y,
-            shape.lineWidth * 2,
-            0,
-            2 * Math.PI,
-            false
-          );
-          if (i === shape.points.length - 1 && shape.border) {
-            ctx.globalCompositeOperation = "source-over";
-            ctx.strokeStyle = "rgba(0,0,0,0.2)";
-            ctx.lineWidth = 2;
-            ctx.stroke();
-            ctx.globalCompositeOperation = "destination-out";
-          }
-          ctx.fill();
-        }
+        ctx.beginPath();
+        ctx.moveTo(shape.points[0].x, shape.points[0].y);
+        for (let i = 1; i < shape.points.length; i++) {
+          const current = shape.points[i];
+          if (i === 1) {
+            ctx.lineTo(current.x, current.y);
+          } else {
+            const previous = shape.points[i - 1];
 
+            const midPointX = (previous.x + current.x) / 2;
+            const midPointY = (previous.y + current.y) / 2;
+
+            ctx.quadraticCurveTo(previous.x, previous.y, midPointX, midPointY);
+          }
+        }
+        ctx.stroke();
         ctx.globalCompositeOperation = "source-over";
+
+        if(shape.border) {
+          ctx.strokeStyle = "rgba(0,0,0,0.2)";
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.arc(shape.points[shape.points.length-1].x, shape.points[shape.points.length-1].y, shape.lineWidth, 0, 2 * Math.PI, false)
+          ctx.stroke();
+        }
         break;
       case "text": {
         ctx.font = shape.font;

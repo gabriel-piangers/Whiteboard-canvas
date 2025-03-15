@@ -57,7 +57,7 @@ export function getShapeFunctions(
           type: "eraser",
           points: [{ x, y }],
           border: true,
-          lineWidth: selectedWidth,
+          lineWidth: selectedWidth*2,
         };
         break;
     }
