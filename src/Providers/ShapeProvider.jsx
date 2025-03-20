@@ -10,6 +10,19 @@ export function ShapeProvider({ children }) {
         newShapes = [...state, action.shape];
         return newShapes;
 
+      case "update": {
+        newShapes = state.map((shape) => {
+          if (shape.id === action.shape.id) return action.shape;
+          return shape;
+        });
+        return newShapes;
+      }
+      case "delete": {
+        return state.filter(shape => {
+          if(shape.id === action.shape.id) return false;
+          return true;
+        })
+      }
       case "clear":
         return [];
 

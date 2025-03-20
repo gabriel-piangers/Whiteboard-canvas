@@ -4,6 +4,7 @@ import { Canvas } from "./components/Canvas";
 import { ShapeProvider } from "./Providers/ShapeProvider";
 import { ToolsProvider } from "./Providers/ToolsProvider";
 import { HistoryProvider } from "./Providers/HistoryProvider";
+import { TransformProvider } from "./Providers/TransformProvider";
 
 export function App() {
   const lastAction = useRef(null);
@@ -17,7 +18,9 @@ export function App() {
               <ToolBar lastAction={lastAction} />
             </div>
 
-            <Canvas lastAction={lastAction} />
+            <TransformProvider>
+              <Canvas lastAction={lastAction} />
+            </TransformProvider>
           </ToolsProvider>
         </HistoryProvider>
       </ShapeProvider>

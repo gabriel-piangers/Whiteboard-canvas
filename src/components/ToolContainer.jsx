@@ -4,7 +4,7 @@ export function ToolContainer({ name, setSelectedTool }) {
       <input
         className={`tool-input tool-bar-option ${name}-tool`}
         type="radio"
-        defaultChecked={name === "pen" ? true : false}
+        defaultChecked={name === "select" ? true : false}
         name="selected-tool"
         onChange={() => {
           setSelectedTool(name);

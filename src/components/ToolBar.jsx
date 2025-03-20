@@ -13,8 +13,16 @@ export function ToolBar({ lastAction }) {
   return (
     <div className="tools-bar">
       <ColorPicker selectedColor={selectedColor} setColor={setColor} />
-
       <WidthSelector selectedWidth={selectedWidth} setWidth={setWidth} />
+
+      <ToolContainer name={'select'} setSelectedTool={setSelectedTool}/>
+      <ToolContainer name={"pen"} setSelectedTool={setSelectedTool} />
+      <ToolContainer name={"line"} setSelectedTool={setSelectedTool} />
+      <ToolContainer name={"rectangle"} setSelectedTool={setSelectedTool} />
+      <ToolContainer name={"circle"} setSelectedTool={setSelectedTool} />
+      <ToolContainer name={"eraser"} setSelectedTool={setSelectedTool} />
+      <ToolContainer name={"text"} setSelectedTool={setSelectedTool} />
+      <UndoRedoTool lastAction={lastAction} />
       <button
         className="clear-button tool-bar-option"
         onClick={() => {
@@ -23,13 +31,6 @@ export function ToolBar({ lastAction }) {
       >
         Clear
       </button>
-      <ToolContainer name={"pen"} setSelectedTool={setSelectedTool} />
-      <ToolContainer name={"line"} setSelectedTool={setSelectedTool} />
-      <ToolContainer name={"rectangle"} setSelectedTool={setSelectedTool} />
-      <ToolContainer name={"circle"} setSelectedTool={setSelectedTool} />
-      <ToolContainer name={"eraser"} setSelectedTool={setSelectedTool} />
-      <ToolContainer name={"text"} setSelectedTool={setSelectedTool} />
-      <UndoRedoTool lastAction={lastAction} />
     </div>
   );
 }

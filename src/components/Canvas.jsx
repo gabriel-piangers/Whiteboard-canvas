@@ -1,12 +1,19 @@
 import { useRef, useEffect, useState } from "react";
-import { getShapeFunctions } from "../scripts/shapeFunctions";
-import { getRedrawFunctions } from "../scripts/redrawFunctions";
+import { GetShapeFunctions } from "../scripts/shapeFunctions";
+import { GetRedrawFunctions } from "../scripts/redrawFunctions";
 import { useToolsContext } from "../Providers/ToolsProvider";
 import { ZoomBar } from "./ZoomBar";
 import { TextOptions } from "./TextOptions";
 import { TextInput } from "./TextInput";
 import { useShapes } from "../Providers/ShapeProvider";
 import { useHistory } from "../Providers/HistoryProvider";
+import {
+  getMouseCoords,
+  getCanvasCoords,
+  mouseToCanvas,
+} from "../scripts/canvasUtils";
+import { SelectionContainer } from "./SelectionContainer";
+import { useTransform } from "../Providers/TransformProvider";
 
 export function Canvas({ lastAction }) {
   const [currentShape, setCurrentShape] = useState(null);
@@ -15,32 +22,36 @@ export function Canvas({ lastAction }) {
     y: window.innerHeight,
   });
 
-  const [scale, setScale] = useState(1);
+  const {offsetXRef, offsetYRef, scale, setScale} = useTransform()
   const [panning, setPanning] = useState(null);
-  const offsetXRef = useRef(0);
-  const offsetYRef = useRef(0);
   const maxZoom = 5;
   const minZoom = 0.1;
 
   const { shapes, dispatchShapes } = useShapes();
   const { addToHistory, undo, redo } = useHistory();
 
-  const { startShape, startText, updateShape, finishShape } = getShapeFunctions(
+  const {
+    startShape,
+    startText,
+    updateShape,
+    moveShape,
+    finishShape,
+    getShapeById,
+  } = GetShapeFunctions(
+    shapes,
     dispatchShapes,
     currentShape,
     setCurrentShape,
     lastAction
   );
 
-  const { redrawBaseCanvas, redrawTempCanvas } = getRedrawFunctions(
-    shapes,
-    currentShape
-  );
+  const { redrawBaseCanvas, redrawTempCanvas, selectShape, getSelection } =
+    GetRedrawFunctions(shapes, currentShape);
+
+  const { selectedTool, selectedColor, selectedWidth } = useToolsContext();
 
   const baseCanvasRef = useRef(null);
   const tempCanvasRef = useRef(null);
-
-  const { selectedTool, selectedColor, selectedWidth } = useToolsContext();
 
   const defaultTextOptions = {
     active: false,
@@ -56,6 +67,11 @@ export function Canvas({ lastAction }) {
   };
   const [inputValue, setInputValue] = useState("");
   const [textOptions, setTextOptions] = useState(defaultTextOptions);
+
+  // const [selectedShape, setSelectedShape] = useState(null);
+  const [selection, setSelection] = useState(null);
+  const [movingShape, setMovingShape] = useState(null);
+  const selectionRef = useRef(null);
 
   useEffect(() => {
     const handleResize = () => {
@@ -85,10 +101,47 @@ export function Canvas({ lastAction }) {
   }, []);
 
   useEffect(() => {
+    const handleMouseMove = (event) => {
+      if (!movingShape) return;
+      const diffX = event.clientX - movingShape.startX;
+      const diffY = event.clientY - movingShape.startY;
+
+      const selection = document.querySelector(".selection-container");
+      if (selection)
+        selection.style.transform = `translate(${diffX}px, ${diffY}px)`;
+    };
+    const handleMouseUp = (event) => {
+      if (!movingShape) return;
+      const diffX =
+        mouseToCanvas(event.clientX, offsetXRef, scale) -
+        mouseToCanvas(movingShape.startX, offsetXRef, scale);
+      const diffY =
+        mouseToCanvas(event.clientY, offsetYRef, scale) -
+        mouseToCanvas(movingShape.startY, offsetYRef, scale);
+      const updatedShape = moveShape(diffX, diffY, movingShape.shape);
+      dispatchShapes({ type: "update", shape: updatedShape });
+      setMovingShape(null);
+      setSelection(getSelection(updatedShape));
+      const selection = document.querySelector(".selection-container");
+      if (selection) {
+        selection.style.transform = `translate(0px, 0px)`;
+      }
+    };
+
+    document.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener("mouseup", handleMouseUp);
+
+    return () => {
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, [movingShape]);
+
+  useEffect(() => {
     localStorage.setItem("shapes", JSON.stringify(shapes));
 
-    const noUpdate = ["undo", "redo"];
-    if (!noUpdate.includes(lastAction.current)) {
+    const dontUpdate = ["undo", "redo"];
+    if (!dontUpdate.includes(lastAction.current)) {
       addToHistory([...shapes]);
     }
 
@@ -97,7 +150,7 @@ export function Canvas({ lastAction }) {
 
   useEffect(() => {
     const handleZoom = (event) => {
-      if (currentShape) return;
+      if (currentShape || movingShape) return;
       event.preventDefault();
       const zoom = event.deltaY < 0 ? 1.1 : 0.9;
       let newScale = scale * zoom;
@@ -106,8 +159,14 @@ export function Canvas({ lastAction }) {
       if (newScale > maxZoom) newScale = maxZoom;
       setScale(newScale);
 
-      const [mouseX, mouseY] = getMouseCoords(event);
-      const [canvasX, canvasY] = getCanvasCoords(event);
+      const [mouseX, mouseY] = getMouseCoords(event, baseCanvasRef);
+      const [canvasX, canvasY] = getCanvasCoords(
+        event,
+        baseCanvasRef,
+        offsetXRef,
+        offsetYRef,
+        scale
+      );
 
       //adjust offset to centralize the mouse position
       offsetXRef.current = mouseX - canvasX * newScale;
@@ -119,40 +178,28 @@ export function Canvas({ lastAction }) {
     return () => {
       window.removeEventListener("wheel", handleZoom);
     };
-  });
+  }, [scale, currentShape, movingShape]);
 
   useEffect(() => {
-    redrawBaseCanvas(baseCanvasRef, offsetXRef, offsetYRef, scale);
-  }, [shapes, currentShape, redrawBaseCanvas, scale]);
+    redrawBaseCanvas(baseCanvasRef);
+    if (selection) {
+      const newSelectedShape = getShapeById(selection.selectedShape.id);
+      setSelection(getSelection(newSelectedShape));
+    }
+  }, [shapes, currentShape, scale]);
 
   useEffect(() => {
-    redrawTempCanvas(tempCanvasRef, offsetXRef, offsetYRef, scale);
+    redrawTempCanvas(tempCanvasRef);
   }, [currentShape, redrawTempCanvas, scale]);
-
-  function getMouseCoords(event) {
-    const canvas = baseCanvasRef.current;
-    const rect = canvas.getBoundingClientRect();
-
-    const mouseX = event.clientX - rect.left;
-    const mouseY = event.clientY - rect.top;
-
-    return [mouseX, mouseY];
-  }
-
-  function getCanvasCoords(event) {
-    const [mouseX, mouseY] = getMouseCoords(event);
-
-    const canvasX = (mouseX - offsetXRef.current) / scale;
-    const canvasY = (mouseY - offsetYRef.current) / scale;
-
-    return [canvasX, canvasY];
-  }
 
   function pan(x, y) {
     offsetXRef.current += x;
     offsetYRef.current += y;
-    redrawBaseCanvas(baseCanvasRef, offsetXRef, offsetYRef, scale);
-    redrawTempCanvas(tempCanvasRef, offsetXRef, offsetYRef, scale);
+    redrawBaseCanvas(baseCanvasRef);
+    redrawTempCanvas(tempCanvasRef);
+    if (selection) {
+      setSelection(getSelection(selection.selectedShape));
+    }
   }
 
   function getCursor() {
@@ -165,7 +212,7 @@ export function Canvas({ lastAction }) {
       case "eraser":
         return 'url("/images/eraser.svg") 0 24, auto';
       case "text":
-        return 'url("/images/text-cursor.svg") 12 12, auto';
+        return 'url("/images/text-cursor.svg"), auto';
       default:
         return "auto";
     }
@@ -192,8 +239,18 @@ export function Canvas({ lastAction }) {
           cursor: getCursor(),
         }}
         onMouseDown={(event) => {
-          const [canvasX, canvasY] = getCanvasCoords(event);
-          if (event.button === 0 && selectedTool !== "text") {
+          const [canvasX, canvasY] = getCanvasCoords(
+            event,
+            baseCanvasRef,
+            offsetXRef,
+            offsetYRef,
+            scale
+          );
+          if (
+            event.button === 0 &&
+            selectedTool !== "text" &&
+            selectedTool !== "select"
+          ) {
             startShape(
               canvasX,
               canvasY,
@@ -210,28 +267,41 @@ export function Canvas({ lastAction }) {
         }}
         onMouseMove={(event) => {
           if (panning) {
-            const [mouseX, mouseY] = getMouseCoords(event);
+            const [mouseX, mouseY] = getMouseCoords(event, baseCanvasRef);
             offsetXRef.current = mouseX - panning.startX;
             offsetYRef.current = mouseY - panning.startY;
 
-            redrawBaseCanvas(baseCanvasRef, offsetXRef, offsetYRef, scale);
+            redrawBaseCanvas(baseCanvasRef);
+            if (selection) setSelection(getSelection(selection.selectedShape));
           } else {
-            const [canvasX, canvasY] = getCanvasCoords(event);
-            if (selectedTool !== "text") {
-              updateShape(canvasX, canvasY);
+            if (selectedTool !== "text" && selectedTool !== "select") {
+              const [canvasX, canvasY] = getCanvasCoords(
+                event,
+                baseCanvasRef,
+                offsetXRef,
+                offsetYRef,
+                scale
+              );
+              updateShape(canvasX, canvasY, baseCanvasRef);
             }
           }
         }}
         onMouseUp={() => {
           if (panning) {
             setPanning(null);
-          } else if (selectedTool !== "text") {
+          } else if (selectedTool !== "text" && selectedTool !== "select") {
             finishShape();
           }
         }}
         onClick={(event) => {
-          let [mouseX, mouseY] = getMouseCoords(event);
-          const [canvasX, canvasY] = getCanvasCoords(event);
+          let [mouseX, mouseY] = getMouseCoords(event, baseCanvasRef);
+          const [canvasX, canvasY] = getCanvasCoords(
+            event,
+            baseCanvasRef,
+            offsetXRef,
+            offsetYRef,
+            scale
+          );
 
           if (selectedTool === "text") {
             if (mouseX > window.innerWidth - 20) {
@@ -250,6 +320,19 @@ export function Canvas({ lastAction }) {
             };
             setTextOptions(newTextOptions);
             startText(canvasX, canvasY, newTextOptions);
+          } else if (selectedTool === "select") {
+            const newSelectedShape = selectShape(
+              mouseX,
+              mouseY,
+              baseCanvasRef,
+            );
+            if (newSelectedShape) {
+              setSelection(getSelection(newSelectedShape));
+              console.log("selectedShape: ", newSelectedShape);
+            } else {
+              setSelection(null);
+              redrawBaseCanvas(baseCanvasRef);
+            }
           }
         }}
         onContextMenu={(event) => {
@@ -280,7 +363,7 @@ export function Canvas({ lastAction }) {
                 dispatchShapes({ type: "add", shape: newText });
               setCurrentShape(null);
               setInputValue("");
-              setTextOptions({...textOptions, active: false});
+              setTextOptions({ ...textOptions, active: false });
             }
           }}
         >
@@ -301,6 +384,17 @@ export function Canvas({ lastAction }) {
           />
         </div>
       )}
+
+      {selection && (
+        <SelectionContainer
+          selection={selection}
+          setSelection={setSelection}
+          setMovingShape={setMovingShape}
+          selectionRef={selectionRef}
+          dispatchShapes={dispatchShapes}
+        />
+      )}
+
       <ZoomBar scale={scale} setScale={setScale} />
     </div>
   );

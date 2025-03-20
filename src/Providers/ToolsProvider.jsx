@@ -5,7 +5,7 @@ const ToolsContext = createContext();
 export function ToolsProvider({ children }) {
   const [selectedColor, setColor] = useState("#000000");
   const [selectedWidth, setWidth] = useState("2");
-  const [selectedTool, setSelectedTool] = useState("pen");
+  const [selectedTool, setSelectedTool] = useState("select");
 
   return (
     <ToolsContext.Provider
