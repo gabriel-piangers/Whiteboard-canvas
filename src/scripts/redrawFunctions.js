@@ -111,28 +111,6 @@ export function GetRedrawFunctions(
         ctx.stroke();
         break;
       case "eraser":
-        // ctx.lineJoin = "round";
-        // ctx.lineCap = "round";
-        // ctx.lineWidth = shape.lineWidth * 2;
-        // ctx.globalCompositeOperation = "destination-out";
-        // ctx.beginPath();
-        // ctx.moveTo(shape.points[0].x, shape.points[0].y);
-        // for (let i = 1; i < shape.points.length; i++) {
-        //   const current = shape.points[i];
-        //   if (i === 1) {
-        //     ctx.lineTo(current.x, current.y);
-        //   } else {
-        //     const previous = shape.points[i - 1];
-
-        //     const midPointX = (previous.x + current.x) / 2;
-        //     const midPointY = (previous.y + current.y) / 2;
-
-        //     ctx.quadraticCurveTo(previous.x, previous.y, midPointX, midPointY);
-        //   }
-        // }
-        // ctx.stroke();
-        // ctx.globalCompositeOperation = "source-over";
-
         if (shape.border) {
           ctx.strokeStyle = "rgba(0,0,0,0.2)";
           ctx.lineWidth = 2;
@@ -193,10 +171,10 @@ export function GetRedrawFunctions(
     };
   }
 
-  function selectShape(x, y, canvasRef) {
+  function selectShape(x, y, canvasRef, selectionMargin = 3) {
+    console.log(selectionMargin)
     const canvas = canvasRef.current;
     const ctx = canvas.getContext("2d", { willReadFrequently: true });
-    const selectionMargin = 3;
     let selectedShape = null;
 
     for (let i = shapes.length - 1; i >= 0; i--) {

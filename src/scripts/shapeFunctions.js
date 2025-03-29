@@ -109,7 +109,8 @@ export function GetShapeFunctions(
         const selectedShape = selectShape(
           canvasToMouse(x, offsetXRef, scale),
           canvasToMouse(y, offsetYRef, scale),
-          canvasRef
+          canvasRef,
+          currentShape.lineWidth
         );
         if (selectedShape) {
           dispatchShapes({ type: "delete", shape: selectedShape });
